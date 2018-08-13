@@ -1,0 +1,13 @@
+##### ANSIBLE INFO ######
+# {{ ansible_managed }}
+##  END ANSIBLE INFO  ##
+[Unit]
+Description=Start x11vnc at startup.
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/x11vnc -auth guess -forever -loop -noxdamage -advertise_truecolor reset -repeat -rfbauth /home/galicaster/.vnc/passwd -rfbport 5900 -shared
+
+[Install]
+WantedBy=multi-user.target

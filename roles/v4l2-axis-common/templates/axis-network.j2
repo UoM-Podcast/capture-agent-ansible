@@ -1,0 +1,12 @@
+# interfaces(5) file used by ifup(8) and ifdown(8)
+auto lo
+iface lo inet loopback
+# axis camera direct connection
+allow-hotplug {{rtp_nic}}
+iface {{rtp_nic}} inet static
+        address 192.168.0.99
+        netmask 255.255.255.0
+        up route add -net 192.168.0.0 netmask 255.255.255.0
+# uni lan via DHCP
+allow-hotplug {{ansible_default_ipv4.interface}}
+iface {{ansible_default_ipv4.interface}} inet dhcp

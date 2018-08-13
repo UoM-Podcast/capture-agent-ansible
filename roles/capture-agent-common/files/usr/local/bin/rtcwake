@@ -1,0 +1,6 @@
+#!/bin/bash
+wake=`cat /sys/class/rtc/rtc0/wakealarm`
+if [[ -z "${wake// }" ]]; then
+  echo 0 > /sys/class/rtc/rtc0/wakealarm
+  echo $(date --date='tomorrow 06:00:00 UTC' +%s) > /sys/class/rtc/rtc0/wakealarm
+fi

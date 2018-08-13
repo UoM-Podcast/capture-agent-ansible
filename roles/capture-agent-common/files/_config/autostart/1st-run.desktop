@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Name=First Run
+Comment=Run first time to enable Desktop sharing
+Exec=/usr/local/bin/1st-run
+Icon=preferences-desktop-remote-desktop
+Terminal=false
+Type=Application
+NoDisplay=true
+StartupWMClass=Galicaster
+StartupNotify=true

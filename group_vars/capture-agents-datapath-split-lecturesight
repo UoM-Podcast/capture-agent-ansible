@@ -1,0 +1,3 @@
+GC_encoder: vaapipostproc ! vaapih264enc rate-control=cbr bitrate=1000
+GC_encoder_high: vaapipostproc ! vaapih264enc rate-control=cbr bitrate=5000
+max_save_mp_days: 14

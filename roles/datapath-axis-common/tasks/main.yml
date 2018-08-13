@@ -1,0 +1,139 @@
+---
+
+# - name: Copy network manager system connection for axis local network
+#   template: >
+#           src=axis-network.j2
+#           dest=/etc/NetworkManager/system-connections/axis-network
+#           mode=600
+#   tags:
+#           - wifi
+- name: Get RTP camera network interface
+  set_fact:
+    rtp_nic: "{{ansible_interfaces[nic_number | int] if ansible_interfaces[nic_number | int] != ansible_default_ipv4.interface else ansible_interfaces[1]}}"
+  tags:
+            - axis
+            - network
+
+- debug: msg="{{rtp_nic}}"
+  tags:
+            - axis
+            - network
+
+- name: "Install ONVIF support packages as root"
+  pip: >
+          name={{ item }}
+          state=latest
+  with_items:
+          - onvif
+  tags:
+          - galicaster
+          - pip
+          - axis
+
+- name: "Create wsdl directory"
+  file: >
+          path=/home/{{ca_username}}/.local/wsdl
+          state=directory
+          group={{ ca_username }}
+          owner={{ ca_username }}
+          recurse=yes
+  tags:
+          - galicaster
+          - pip
+          - axis
+
+- name: "copy wsdl files to local user"
+  command: cp -r /usr/local/wsdl/. /home/{{ca_username}}/.local/wsdl/
+  tags:
+          - galicaster
+          - pip
+          - axis
+
+- name: "wsdl directory perms"
+  file: >
+          path=/home/{{ca_username}}/.local/wsdl
+          state=directory
+          group={{ ca_username }}
+          owner={{ ca_username }}
+          recurse=yes
+  tags:
+          - galicaster
+          - pip
+          - axis
+
+
+- name: Create interfaces for DHCP LAN and static direct connection to camera
+  template: >
+          src=axis-network.j2
+          dest=/etc/network/interfaces
+          mode=600
+  tags:
+          - axis
+          - network
+
+# - name: Remove the current network config
+#   nmcli:
+#     conn_name: Wired connection 2
+#     state: absent
+#   ignore_errors: True
+#   tags:
+#             - axis
+#             - network
+
+#- name: ensure NetworkManager default dhcp connection is set
+#  template: src=uni-lan-network.j2 dest=/etc/NetworkManager/system-connections/uni-lan-network mode=0600
+#  tags:
+#            - axis
+#            - network
+
+#- name: Make a new network manager system connection for axis local network
+#  nmcli:
+#    conn_name: axis-network
+#    ifname: "{{rtp_nic}}"
+#    type: ethernet
+#    ip4: 192.168.0.99/24
+#    state: present
+#  tags:
+#            - axis
+#            - network
+
+#- name: never use axis network as default network
+#  lineinfile:
+#    dest: /etc/NetworkManager/system-connections/axis-network
+#    regexp: never-default=true
+#    insertafter: method=manual
+#    line: never-default=true
+#  tags:
+#            - axis
+#            - network
+
+- name: "Setup V4l2 Video devices /dev ordering"
+  copy: >
+          src={{ item }}
+          dest=/{{ item }}
+          mode=0644
+  with_items:
+          - etc/udev/rules.d/10-local-v4l2.rules
+  tags:
+           - axis
+
+- name: "Datapath and Camera Profiles"
+  template: >
+         src=profiles/{{ item }}
+         dest=/etc/galicaster/profiles/{{ item }}
+         group={{ ca_username }}
+         owner={{ ca_username }}
+  with_items:
+         - datapath-axis-muxed.ini
+         - datapath-axis-split.ini
+         - datapath-axis-usb.ini
+         - datapath-axis-no-usb.ini
+         - axis-muxed.ini
+         - axis-x2-muxed.ini
+  # notify: restart galicaster
+  tags:
+         - galicaster
+         - galicaster_config
+         - galicaster_profiles
+         - datapath
+         - axis

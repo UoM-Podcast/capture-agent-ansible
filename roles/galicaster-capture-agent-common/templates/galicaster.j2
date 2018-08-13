@@ -1,0 +1,6 @@
+#!/bin/bash
+# make back up of any failed recording
+cp -r /home/galicaster/Repository/attach/ /home/galicaster/Videos/attach-`date +"%F-%T"`
+# pause to make sure the capture card driver has loaded and network is up
+sleep 5
+python {{ GC_location }}

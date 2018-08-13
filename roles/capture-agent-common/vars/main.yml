@@ -1,0 +1,9 @@
+## capture-agent-common/vars
+---
+host_ip_address: "{{ '127.0.0.1' if ip_address == 'dhcp' else ip_address }}"
+manchester_deb_repo: "{{ deb_repo_hostname }}{{ UOM_deb_release }}"
+
+logfile: "{{ GC_log_path }}"
+
+ca_hostname: "{{ ansible_uom_hostname }}"
+ip_address: "{{ ansible_release_host|default('dhcp') }}"

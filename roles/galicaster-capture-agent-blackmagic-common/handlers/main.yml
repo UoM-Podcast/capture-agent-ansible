@@ -1,0 +1,4 @@
+## galicaster-capture-agent-blackmagic/handlers
+---
+- name: restart galicaster
+  command: /usr/local/bin/kill_gc "Blackmagic profiles update" false

@@ -1,0 +1,24 @@
+## galicaster-capture-agent-usb/tasks
+---
+
+# - name: "Get motherboard model"
+#   shell: dmidecode -s baseboard-product-name
+#   ignore_errors: yes
+#   register: motherboard
+#   tags: volume
+
+- name: "Setup USB microphone device 0 volume to 100%"
+  command: amixer -c1 sset 'Mic' 100%
+  ignore_errors: yes
+  become: true
+  become_user: galicaster
+#  when: motherboard.stdout == 'H77N-WIFI'
+  tags: volume
+
+- name: "Setup USB microphone device 1 volume to 100%"
+  command: amixer -c2 sset 'Mic' 100%
+  ignore_errors: yes
+  become: true
+  become_user: galicaster
+#  when: motherboard.stdout == 'H97N-WIFI' or motherboard.stdout == 'H87N-WIFI'
+  tags: volume

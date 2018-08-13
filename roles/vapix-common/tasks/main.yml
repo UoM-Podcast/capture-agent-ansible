@@ -1,0 +1,184 @@
+---
+
+# camera account settings
+- name: VAPIX change password if new or factory reset
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/pwdgrp.cgi?action=update&user=root&pwd={{rtp_pass}}"
+    method: GET
+    user: "{{ default_axis_user }}"
+    password: "{{ default_axis_pass }}"
+    status_code: 200
+  when:
+    - axis_factory|default(false)
+  tags:
+        - vapix
+
+# camera settings
+- name: VAPIX set camera capture mode
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&ImageSource.I0.Video.CaptureMode={{vapix_camera_capture_mode}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  changed_when: True
+  when:
+    - axis_factory|default(false)
+  notify:
+    - VAPIX process
+    - VAPIX Restart
+    - VAPIX pause
+    - VAPIX restart wait
+  tags:
+        - vapix
+
+# wait for camera to chill after reinitilising the video
+- meta: flush_handlers
+
+- name: VAPIX set night vision
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&&PTZ.Various.V1.IrCutFilter={{vapix_camera_ircutfilter}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+- name: VAPIX set LED
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&TallyLED.Usage={{vapix_camera_led}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+- name: VAPIX set video orientation
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&ImageSource.I0.Sensor.VideoRotation={{vapix_video_rotation}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+# time settings
+- name: VAPIX set time source
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Time.SyncSource=None"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+        - vapixtime
+
+- name: VAPIX set time auto daylight savings
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Time.DST.Enabled=yes"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+        - vapixtime
+
+# stream settings
+- name: VAPIX set camera stream FPS
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Image.I0.Stream.FPS={{vapix_stream_fps}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+- name: VAPIX set stream max bitrate
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Image.I0.RateControl.MaxBitrate={{vapix_stream_maxrate}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+- name: VAPIX set stream rate mode
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Image.I0.RateControl.Mode={{vapix_stream_ratemode}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+
+- name: VAPIX set stream Priority
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Image.I0.RateControl.Priority={{vapix_stream_priority}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+- name: VAPIX set stream target bitrate
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Image.I0.RateControl.TargetBitrate={{vapix_stream_targetbit}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+- name: VAPIX set stream number of I frames
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Image.I0.MPEG.ICount={{vapix_stream_iframes}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+
+- name: VAPIX set stream number of P frames
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Image.I0.MPEG.PCount={{vapix_stream_pframes}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+- name: VAPIX set stream Compression
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Image.I0.Appearance.Compression={{vapix_stream_compression}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+- name: VAPIX set stream Resolution
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/param.cgi?action=update&Image.I0.Appearance.Resolution={{vapix_stream_resolution}}"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  when:
+    - axis_factory|default(false)
+  tags:
+        - vapix

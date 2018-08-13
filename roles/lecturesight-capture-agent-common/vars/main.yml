@@ -1,0 +1,5 @@
+## lecturesight-capture-agent-common/vars
+---
+
+java_version: 8
+nvidia_driver: nvidia-367

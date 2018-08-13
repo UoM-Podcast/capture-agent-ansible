@@ -1,0 +1,30 @@
+## galicaster-capture-agent-split/tasks
+---
+- name: list of the profile .ini files
+  shell: find /etc/galicaster/profiles -type f -name "*split.ini"
+  register: profiles_ini
+  when: "{{ ansible_failovermic }} == True"
+  tags:
+      - failovermic
+      - galicaster_config
+
+- name: Insert failover microphone audio track into current galicaster profile
+  blockinfile:
+    dest: "{{ item }}"
+    block: |
+
+      [track3]
+      name = failover
+      active = True
+      flavor = presenter
+      device = pulse
+      location = {{ GC_usb_mic_source }}
+      file = failover.mp3
+      amplification = 1.0
+      vumeter = False
+    insertafter: EOF
+  with_items: "{{ profiles_ini.stdout_lines }}"
+  when: "{{ ansible_failovermic }} == True"
+  tags:
+      - failovermic
+      - galicaster_config

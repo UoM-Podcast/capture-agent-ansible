@@ -1,0 +1,82 @@
+## galicaster-capture-agent-datapath/handlers
+---
+- name: restart galicaster
+  command: /usr/local/bin/kill_gc "Datapath driver or profiles update" false
+
+- name: Remove any rtc wakeup Schedule
+  shell: echo 0 > /sys/class/rtc/rtc0/wakealarm
+  when: ansible_connection != "local"
+
+- name: Set hwclock to 10 mins to RTC boot time
+  shell: hwclock --set --localtime --date="07:58:00"
+  when: ansible_connection != "local"
+
+- name: Schedule host restart after a minute
+  shell: echo $(date '+%s' -d '08:10:00 UTC') > /sys/class/rtc/rtc0/wakealarm
+  when: ansible_connection != "local"
+
+- name: Shutdown host
+  shell: sleep 2 && shutdown -P now "Shutdown triggered by Ansible"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: ansible_connection != "local"
+
+- name: Restart host
+  shell: sleep 2 && shutdown -r now "Reboot triggered by Ansible"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: ansible_connection != "local"
+
+- name: Wait for host to restart
+  local_action: >
+    wait_for
+    host={{ ansible_ssh_host }}
+    port={{ ansible_ssh_port }}
+    delay=600
+    timeout=800
+
+- name: Short Wait for host to restart
+  local_action: >
+    wait_for
+    host={{ ansible_ssh_host }}
+    port={{ ansible_ssh_port }}
+    delay=90
+    timeout=800
+
+
+- name: Stop ntp
+  service: >
+    name=ntp
+    state=stopped
+  tags:   ntp
+
+- name: Set local time by ntpdate
+  shell: >
+    /usr/sbin/ntpdate -s {{ ntp_server }}
+  tags:   ntp
+
+- name: Start ntp
+  service: >
+    name=ntp
+    state=started
+  tags:   ntp
+
+- name: reinstall datapath kernel driver
+  shell: cd /usr/local/src/datapath && ./scripts/install.kernel
+  register: datapath_driver
+  tags:
+          - kernel
+          - datapath
+
+# # Ensure datapath driver is installed on local install machines
+# - name: local reinstall datapath on first boot
+#   lineinfile:
+#     dest: /usr/local/bin/1st-run
+#     regexp: '/usr/bin/dconf load /org/compiz/profiles/unity/ < /tmp/dconf-compiz-unity-settings.ini'
+#     insertafter: '/usr/bin/dconf load /org/compiz/profiles/unity/ < /tmp/dconf-compiz-unity-settings.ini'
+#     line: 'cd /usr/local/src/datapath && ./scripts/install.kernel'
+#   tags:
+#           - kernel
+#           - datapath

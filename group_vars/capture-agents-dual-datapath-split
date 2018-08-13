@@ -1,0 +1,23 @@
+---
+GC_profile: Dual Datapath Split Audio
+
+GC_matterhorn_workflow: manchester-sidebyside
+GC_resolution: auto
+
+GC_qrcode_ignore_track: camera
+
+nagios_temp_sensor: '"Core 0"'
+nagios_load_warn: 14.0
+nagios_load_crit: 19.0
+
+GC_send_config: True
+
+GC_encoder: vaapipostproc ! vaapih264enc rate-control=cbr bitrate=1000
+GC_encoder_high: vaapipostproc ! vaapih264enc rate-control=cbr bitrate=5000
+max_save_mp_days: 14
+
+GC_checkaudiosource_low_alert: -50
+GC_checkaudiosource_check_recording: True
+
+CA_camctrl: False
+camera_exists: True

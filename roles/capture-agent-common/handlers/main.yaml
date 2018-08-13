@@ -1,0 +1,19 @@
+- name: Restart host
+  shell: sleep 2 && /sbin/shutdown -r now "Reboot triggered by Ansible"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: ansible_connection != "local"
+
+- name: Wait for host to restart
+  local_action: >
+    wait_for
+    host={{ ansible_ssh_host }}
+    port={{ ansible_ssh_port }}
+    delay=90
+    timeout=800
+
+# - name: Do apt autoremove after dist-upgrade
+#   apt:
+#     autoremove: yes
+#   ignore_errors: true

@@ -1,0 +1,63 @@
+# galicaster-capture-agent-tests
+# Galicaster - Opencast testing
+---
+- name: set future datetime for scheduler start
+  shell: date --date="11min" -u +"%Y-%m-%dT%H:%M:%SZ"
+  register: sch_time_start
+  tags:
+          - tests
+          - test_schedule
+
+- name: set future datetime for scheduler end
+  shell: date --date="16min" -u +"%Y-%m-%dT%H:%M:%SZ"
+  register: sch_time_end
+  tags:
+          - tests
+          - test_schedule
+
+- debug: var=matterhorn_host
+  tags:
+          - tests
+          - test_schedule
+
+
+- name: Schedule a recording in opencast
+  opencast_schedule:
+    server: "{{ matterhorn_host }}"
+    username: "{{ matterhorn_user }}"
+    password: "{{ matterhorn_password }}"
+    series: 3273473b-1757-4159-b8c1-8d77bef9cc28
+    time_start: "{{sch_time_start.stdout}}"
+    time_end: "{{sch_time_end.stdout}}"
+    location: "{{ca_matterhorn_name}}"
+  # delegate_to: localhost
+  register: result
+  tags:
+          - tests
+          - test_schedule
+
+- debug: var=result.meta
+  tags:
+          - tests
+          - test_schedule
+
+- pause:
+    minutes: 20
+  tags:
+          - tests
+
+- name: Check recording succeeded
+  opencast_workflow:
+    server: "{{ matterhorn_host }}"
+    workflow_endpoint: '/workflow/instance/'
+    username: "{{ matterhorn_user }}"
+    password: "{{ matterhorn_password }}"
+    workflow_id: "{{ result.meta }}"
+  # delegate_to: localhost
+  register: wf_res
+  tags:
+          - tests
+
+- debug: var=wf_res['meta']
+  tags:
+          - tests

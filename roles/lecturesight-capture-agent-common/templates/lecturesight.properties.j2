@@ -1,0 +1,130 @@
+#
+# LectureSight - UoM Generic Configuration
+#
+
+# Uncomment the following line to make LS wait for 'run' command in the console
+# before starting the tracking
+#
+#cv.lecturesight.heartbeat.autostart=-1
+#cv.lecturesight.heartbeat.listens.to=VA_DONE
+
+#
+# VISCA Configuration
+#
+com.wulff.lecturesight.visca.port.device=/dev/{{ visca_dev }}
+
+# Camera position update request interval
+com.wulff.lecturesight.visca.updater.interval=50
+
+# To report the camera focus position, enable this setting and adjust the update interval to 500ms
+#com.wulff.lecturesight.visca.updater.poll.focus=true
+
+#
+# VAPIX Configuration (Axis cameras)
+#
+cv.lecturesight.vapix.camera.host={{ rtp_ip }}
+cv.lecturesight.vapix.camera.username={{ rtp_user }}
+cv.lecturesight.vapix.camera.password={{ rtp_pass }}
+cv.lecturesight.vapix.camera.pan.min=-17000
+cv.lecturesight.vapix.camera.pan.max=17000
+cv.lecturesight.vapix.camera.tilt.min=-2000
+cv.lecturesight.vapix.camera.tilt.max=9000
+cv.lecturesight.vapix.camera.zoom.min=1
+cv.lecturesight.vapix.camera.zoom.max=9999
+cv.lecturesight.vapix.camera.zoom.maxspeed=1
+cv.lecturesight.vapix.updater.interval=100
+
+# Set this property to 1 if the camera is inverted
+cv.lecturesight.vapix.camera.inverted={{ vapix_inverted }}
+
+#
+# Video Input
+#
+cv.lecturesight.framesource.input.mrl=v4l2:///dev/webcam0[width=1280;height=720;Power Line Frequency=50 Hz;Focus, Auto=0;Focus (absolute)=0]
+
+# Webcam image format - change this to MJPEG for higher resolutions on longer USB connections (USB over CAT5)
+cv.lecturesight.framesource.v4l.format=YUYV
+
+#
+# Video Analysis
+#
+cv.lecturesight.videoanalysis.change.threshold={{ change_threshold }}
+cv.lecturesight.videoanalysis.cell.activation.threshold=3
+cv.lecturesight.videoanalysis.object.cells.min=10
+cv.lecturesight.videoanalysis.object.cells.max=128
+cv.lecturesight.videoanalysis.object.dormant.max=2000
+
+#
+# Camera Steering Worker
+#
+# The 'damp' values control the maximum pan and tilt speeds the camera will move
+# with, 1.0 means maximum speed possible with the hardware.
+#
+# The 'alpha' values control the size of the area around the target in which
+# the camera slows down.
+#
+# The 'stop' values control the size of the area around the target in which
+# the camera movement stops.
+cv.lecturesight.ptz.steering.worker.relativemove.move.damp.pan={{ move_damp_pan }}
+cv.lecturesight.ptz.steering.worker.relativemove.move.damp.tilt={{ move_damp_tilt }}
+cv.lecturesight.ptz.steering.worker.relativemove.move.alpha.x={{ move_alpha_x }}
+cv.lecturesight.ptz.steering.worker.relativemove.move.alpha.y={{ move_alpha_y }}
+cv.lecturesight.ptz.steering.worker.relativemove.move.stop.x={{ move_stop_x }}
+cv.lecturesight.ptz.steering.worker.relativemove.move.stop.y={{ move_stop_y }}
+
+# The scene limits must be set to the pan and tilt values that correspond to the
+# limits of the image of the overview camera. Setting this correctly is vital
+# for a proper calibration of the system!
+# If these properties are not configured, the limits of the camera coordinate
+# system are regarded as the scene limits.
+cv.lecturesight.ptz.steering.worker.relativemove.scene.limit.left={{ scene_limit_left }}
+cv.lecturesight.ptz.steering.worker.relativemove.scene.limit.right={{ scene_limit_right }}
+cv.lecturesight.ptz.steering.worker.relativemove.scene.limit.top={{ scene_limit_top }}
+cv.lecturesight.ptz.steering.worker.relativemove.scene.limit.bottom={{ scene_limit_bottom }}
+
+# Disable auto-focus when tracking
+#cv.lecturesight.ptz.steering.worker.relativemove.focus.fixed=true
+#cv.lecturesight.ptz.steering.worker.relativemove.move.initial.delay=5000
+
+#
+# Configuration of PTZ Camera Operator
+#
+# Initial camera position for tracking
+cv.lecturesight.cameraoperator.ptz.pan={{ ptz_pan }}
+cv.lecturesight.cameraoperator.ptz.tilt={{ ptz_tilt }}
+cv.lecturesight.cameraoperator.ptz.zoom={{ ptz_zoom }}
+
+# Tilting disabled (pan-only)
+cv.lecturesight.cameraoperator.ptz.tilt.lock={{ ptz_tilt_lock }}
+
+# Apply tilt offset to target's y position
+cv.lecturesight.cameraoperator.ptz.tilt.offset= {{ ptz_tilt_offset }}
+
+# Camera's frame width and height
+cv.lecturesight.cameraoperator.ptz.frame.width={{ ptz_frame_width }}
+cv.lecturesight.cameraoperator.ptz.frame.height={{ ptz_frame_height }}
+
+# Time to continue tracking objects after they were last seen (milliseconds)
+cv.lecturesight.cameraoperator.ptz.timeout=500
+
+# Reset the camera to this preset position when not tracking (because of scheduler)
+cv.lecturesight.cameraoperator.ptz.idle.preset=0
+
+# Reset the camera to the home position after track lost timeout
+cv.lecturesight.cameraoperator.ptz.tracking.timeout=0
+
+# Do not acquire a new target if there are more than this number of targets being tracked
+cv.lecturesight.cameraoperator.ptz.target.limit=2
+
+#
+# Profile manager - set profile for masking regions
+#
+cv.lecturesight.profile.manager.active.profile={{ ca_matterhorn_name }}
+
+#
+# Scheduler - watch the Galicaster schedule file
+#
+cv.lecturesight.scheduler.enable={{ scheduler_enable }}
+cv.lecturesight.scheduler.schedule.file={{ scheduler_schedule_file }}
+cv.lecturesight.scheduler.timezone.offset={{ scheduler_timezone_offset }}
+cv.lecturesight.scheduler.tracker.leadtime={{ scheduler_tracker_leadtime }}

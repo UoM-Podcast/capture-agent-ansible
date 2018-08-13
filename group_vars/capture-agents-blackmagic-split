@@ -1,0 +1,4 @@
+---
+GC_profile: Blackmagic HDMI Split Audio
+GC_checkaudiosource_low_alert: -50
+GC_checkaudiosource_check_recording: True

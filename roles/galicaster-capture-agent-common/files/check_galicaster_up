@@ -1,0 +1,16 @@
+#!/bin/bash
+
+gc_status=`ps -eo pid,args | grep galicaster | grep python | grep -v grep | awk '{ print $1 }'`
+gc_proc_stat=`ps -eo pid,stat,args | grep galicaster | grep python | grep -v grep | awk '{ print $2 }'`
+if [[ "$gc_status" == "" ]]
+then
+	echo "CRITICAL - Galicaster is not running!"
+	exit 2
+elif [[ "$gc_proc_stat" == "Z" ]]
+then
+	echo "CRITICAL - Galicaster is a Zombie process, suggested manual kernel panic to fix"
+	exit 2
+else
+	echo "OK - Galicaster is running (PID $gc_status)"
+	exit 0
+fi

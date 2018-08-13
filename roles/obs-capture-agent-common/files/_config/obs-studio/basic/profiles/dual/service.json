@@ -1,0 +1,7 @@
+{
+    "settings": {
+        "key": "mtt-test-j-backup",
+        "server": "rtmp://35.178.79.120/mtt-test-j-backup"
+    },
+    "type": "rtmp_custom"
+}

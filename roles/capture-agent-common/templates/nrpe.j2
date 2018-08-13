@@ -1,0 +1,53 @@
+##### ANSIBLE INFO ######
+# {{ ansible_managed }}
+##  END ANSIBLE INFO  ##
+#############################################################################
+# NRPE Config File
+# Written by: Ethan Galstad (nagios@nagios.org)
+#
+# Last Modified: 12-9-2013
+# Last Modified by: Andrew Wilson (andrew.wilson-2@manchester.ac.uk)
+#############################################################################
+
+log_facility=daemon
+pid_file=/var/run/nagios/nrpe.pid
+server_port=5666
+#server_address=127.0.0.1
+nrpe_user=nagios
+nrpe_group=nagios
+allowed_hosts={{nagios_hosts}}
+dont_blame_nrpe=0
+debug=0
+command_timeout=60
+connection_timeout=300
+#allow_weak_random_seed=1
+#include=<somefile.cfg>
+#include_dir=<somedirectory>
+#include_dir=<someotherdirectory>
+
+
+
+# COMMAND DEFINITIONS
+# command[<command_name>]=<command_line>
+# plugins installed in a /usr/lib/nagios/plugins
+
+command[check_http1]=/usr/lib/nagios/plugins/check_http {{matterhorn_host}}
+command[check_load]=/usr/lib/nagios/plugins/check_load -w {{nagios_load_warn}},{{nagios_load_warn}},{{nagios_load_warn}} -c {{nagios_load_crit}},{{nagios_load_crit}},{{nagios_load_crit}}
+command[check_disk]=/usr/lib/nagios/plugins/check_disk -w 20% -c 10% -p /dev/sda1
+command[check_lm_sensors]=/usr/lib/nagios/plugins/check_lm_sensors -h {{ nagios_temp_sensor }}={{nagios_temp_warn}},{{nagios_temp_crit}}
+command[check_lm_sensors_fan1]=/usr/lib/nagios/plugins/check_lm_sensors --low fan1=1000,500
+command[check_lm_sensors_fan2]=/usr/lib/nagios/plugins/check_lm_sensors --low fan2=2000,1000
+command[check_mic]=/usr/lib/nagios/plugins/check_mic
+command[check_blinkstick]=/usr/lib/nagios/plugins/check_blinkstick
+command[check_gst_gc]=/etc/galicaster/nagios/plugins/nagios_gst_error
+command[check_mem]=/usr/lib/nagios/plugins/check_linux_stats.pl -M -w 99,80 -c 100,80
+command[check_low_load]=/usr/lib/nagios/plugins/check_low_load -w 0.7 -c 0.5
+
+# command[check_total_procs]=/usr/lib/nagios/plugins/check_procs -w 170 -c 200
+# command[check_sensors]=/usr/lib/nagios/plugins/check_sensors
+# command[check_zombie_procs]=/usr/lib/nagios/plugins/check_procs -w 5 -c 10 -s Z
+# command[check_users]=/usr/lib/nagios/plugins/check_users -w 5 -c 10
+
+# include=/etc/nagios/nrpe_local.cfg
+
+# include_dir=/etc/nagios/nrpe.d/

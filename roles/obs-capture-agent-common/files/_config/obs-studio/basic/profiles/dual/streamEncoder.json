@@ -1,0 +1,8 @@
+{
+    "bitrate": 5000,
+    "keyint_sec": 2,
+    "preset": "faster",
+    "profile": "baseline",
+    "tune": "zerolatency",
+    "use_bufsize": false
+}

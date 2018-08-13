@@ -1,0 +1,11 @@
+#!/bin/bash
+
+mic_status=`tail -1 /var/www/no_mic 2> /dev/null`
+if [[ $mic_status == *unplugged* ]]
+then
+	echo "CRITICAL - $mic_status"
+	exit 2
+else
+	echo "OK - microphone plugged in"
+	exit 0
+fi

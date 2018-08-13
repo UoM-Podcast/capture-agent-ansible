@@ -1,0 +1,383 @@
+## lecturesight-capture-agent-common/tasks
+---
+- name: "Install Nvidia drivers"
+  apt: >
+          pkg={{ item }}
+          state=present
+  with_items:
+          - "{{ nvidia_driver }}"
+  register: nvidia
+  when: opencl is defined and opencl == 'nvidia'
+  tags:
+          - lecturesight
+          - nvidia
+
+- name: "Install ls dependancies"
+  apt: >
+          pkg={{ item }}
+          state=present
+  with_items:
+          - openjdk-{{ java_version }}-jre
+          - build-essential
+          - openssl
+          - bc
+          - curl
+          - libssl-dev
+          - telnet
+  tags:
+          - lecturesight
+          - java
+          - telnet
+
+# - debug: msg={{ ansible_kernel }}
+#   tags:
+#         - lecturesight
+#         - opencl
+#         - intel
+
+- name: Install Opencl driver patched kernel from source
+  include_role:
+    name: opencl-common
+  when:
+    - opencl is defined
+    - opencl == 'intel'
+    - ansible_kernel != opencl_kernel
+  tags:
+        - lecturesight
+        - opencl
+        - intel
+
+- name: "Reconfigure Xorg"
+  copy: >
+          src=etc/X11/{{ item }}
+          dest=/etc/X11/{{ item }}
+  with_items:
+          - xorg.conf
+  when: mb in ["Z97-PRO GAMER", "8053"] and nvidia.changed
+  tags:
+          - lecturesight
+          - xorg
+
+- name: "Setup V4l2 Video devices /dev ordering"
+  copy: >
+          src={{ item }}
+          dest=/{{ item }}
+          mode=0644
+  with_items:
+          - etc/udev/rules.d/10-local-v4l2.rules
+  tags:
+           - lecturesight
+
+- name: Adding user {{ ca_username }} to dialout group for visca
+  user: >
+          name={{ ca_username }}
+          groups=dialout
+          append=yes
+  tags:
+          - lecturesight
+
+- name: "Create Pysca application directory"
+  file: >
+          path=/opt/pysca
+          state=directory
+          group={{ ca_username }}
+          owner={{ ca_username }}
+  tags:
+          - lecturesight
+          - pysca
+
+- name: "Install Pysca from git"
+  git: >
+          repo={{ pysca_repo }}
+          dest=/opt/pysca
+          version=master
+  become: yes
+  become_user: "{{ ca_username }}"
+  when: inventory_hostname in groups['capture-agents-dual-datapath-split-lecturesight']
+  tags:
+          - lecturesight
+          - pysca
+
+- name: Download latest LectureSight Tar file
+  get_url: >
+           url={{ repo_hostname }}{{ deploy_environment }}/lecturesight.tar.gz
+           dest=/tmp/lecturesight.tar.gz
+           force=yes
+  tags:
+        - lecturesight
+        - lsinstall
+
+- name: Create Lecturesight directory
+  file:
+    path: /opt/ls
+    group: "{{ ca_username }}"
+    owner: "{{ ca_username }}"
+    recurse: yes
+    state: directory
+  tags:
+        - lecturesight
+        - lsinstall
+
+- name: Untar the LectureSight files
+  unarchive: >
+           src=/tmp/lecturesight.tar.gz
+           dest=/opt/ls
+           group={{ ca_username }}
+           owner={{ ca_username }}
+           copy=no
+  tags:
+        - lecturesight
+        - lsinstall
+
+- name: Remove VISCA bundles
+  file:
+    path: /opt/ls/bundles/application/{{ item }}
+    state: absent
+  with_items:
+        - visca-api-1.0.jar
+        - visca-service-0.1.jar
+  when: inventory_hostname not in groups['capture-agents-dual-datapath-split-lecturesight']
+  tags:
+        - lecturesight
+        - lsinstall
+
+- name: Remove VAPIX bundles
+  file:
+    path: /opt/ls/bundles/application/{{ item }}
+    state: absent
+  with_items:
+        -  lecturesight-vapix-camera-0.3.jar
+  when: inventory_hostname in groups['capture-agents-dual-datapath-split-lecturesight']
+  tags:
+        - lecturesight
+        - lsinstall
+
+- name: Setup LectureSight schedule config
+  template: >
+        src=org.apache.felix.fileinstall-scheduler.j2
+        dest=/opt/ls/conf/fileinstall/org.apache.felix.fileinstall-scheduler.cfg
+        group={{ ca_username }}
+        owner={{ ca_username }}
+  tags:
+        - lecturesight
+        - lsinstall
+        - lsconfig
+
+- name: Save existing lecturesight configuration
+  fetch:
+    src: /opt/ls/conf/lecturesight.properties
+    dest: roles/lecturesight-capture-agent-common/files/opt/ls/conf/{{ inventory_hostname }}/lecturesight.properties
+    flat: yes
+    fail_on_missing: no
+  register: lssaved
+  when: not lsconfig_force_saved|default(false)
+  tags:
+          - lecturesight
+          - lsconfig
+          - lsinstall
+          - lssaveconfig
+
+# - debug: msg="{{ lssaved }}"
+#   tags:
+#           - lsconfig
+
+- name: Check for local lecturesight.properties save
+  local_action: stat path=roles/lecturesight-capture-agent-common/files/opt/ls/conf/{{ inventory_hostname }}/lecturesight.properties
+  register: stat_ls_config
+  tags:
+          - lsconfig
+          - lecturesight
+          - lsinstall
+
+# - debug: msg="{{ stat_ls_config }}"
+#   tags:
+#           - lsconfig
+
+- name: Setup LectureSight saved conf
+  copy: >
+        src=opt/ls/conf/{{ inventory_hostname }}/lecturesight.properties
+        dest=/opt/ls/conf/lecturesight.properties
+        group={{ ca_username }}
+        owner={{ ca_username }}
+  when: stat_ls_config.stat.exists or lsconfig_force_saved|default(false)
+  notify:
+        - stop lecturesight
+# lssaved is defined and lssaved.changed
+  tags:
+        - lecturesight
+        - lsinstall
+        - lsconfig
+
+# use generic LS config only during install
+- name: Setup LectureSight generic conf
+  template: >
+        src=lecturesight.properties.j2
+        dest=/opt/ls/conf/lecturesight.properties
+        group={{ ca_username }}
+        owner={{ ca_username }}
+  when:
+        - ls_settings_saved == False
+        - stat_ls_config.stat.exists == false
+  notify:
+        - stop lecturesight
+  tags:
+        - lecturesight
+        - lsinstall
+        - lsconfig
+
+- name: Save existing lecturesight profile
+  fetch:
+    src: /opt/ls/profiles/{{ ca_matterhorn_name }}.scn
+    dest: roles/lecturesight-capture-agent-common/files/opt/ls/profiles/{{ inventory_hostname }}/profile.scn
+    flat: yes
+    fail_on_missing: no
+  register: lssaved
+  when: not lsconfig_force_saved|default(false)
+  tags:
+          - lecturesight
+          - lsinstall
+          - lsconfig
+          - lssaveconfig
+
+- name: Check for local profile.scn save
+  local_action: stat path=roles/lecturesight-capture-agent-common/files/opt/ls/profiles/{{ inventory_hostname }}/profile.scn
+  register: stat_ls_profile
+  tags:
+          - lsconfig
+          - lecturesight
+          - lsinstall
+
+- name: Setup LectureSight saved profile
+  copy: >
+        src=opt/ls/profiles/{{ inventory_hostname }}/profile.scn
+        dest=/opt/ls/profiles/{{ ca_matterhorn_name }}.scn
+        group={{ ca_username }}
+        owner={{ ca_username }}
+  when: stat_ls_profile.stat.exists or lsconfig_force_saved|default(false)
+# lssaved is defined and lssaved.changed
+  notify:
+      - stop lecturesight
+  tags:
+        - lecturesight
+        - lsinstall
+        - lsconfig
+
+- name: Setup Generic LectureSight Generic profile
+  template: >
+        src=profile.scn.j2
+        dest=/opt/ls/profiles/{{ ca_matterhorn_name }}.scn
+        group={{ ca_username }}
+        owner={{ ca_username }}
+  when:
+        - ls_settings_saved == false
+        - stat_ls_profile.stat.exists == false
+  notify:
+        - stop lecturesight
+  tags:
+        - lecturesight
+        - lsinstall
+        - lsconfig
+
+- name: Setup LectureSight start script
+  template: >
+        src=lecturesight.j2
+        dest=/usr/bin/lecturesight
+        mode=755
+
+  tags:
+        - lecturesight
+        - lsinstall
+
+- name: "Setup CA user LectureSight autostart"
+  copy: >
+          src=_{{ item }}
+          dest=/home/{{ ca_username }}/.{{ item }}
+          owner={{ ca_username }}
+          group={{ ca_username }}
+          mode=0644
+  with_items:
+          - config/autostart/lecturesight.desktop
+  tags:
+           - lecturesight
+           - autostart
+           - lsinstall
+
+- name: "Copy Lecturesight scripts"
+  template: >
+          src={{item}}.j2
+          dest=/usr/local/bin/{{item}}
+          mode=755
+  with_items:
+          - kill_lecturesight
+          - check_lecturesight
+  tags:
+          - lecturesight
+          - lsinstall
+          - cronjobs
+
+- name: "Setup Lecturesight Restart cron job"
+  cron: >
+          name="restart lecturesight"
+          user={{ ca_username }}
+          minute="{{ 59 | random }}"
+          hour="{{ [ '6', '7' ] | random }}"
+          job="/usr/local/bin/kill_lecturesight"
+  tags:
+          - cronjobs
+          - lecturesight
+          - lsinstall
+
+- name: "Setup Lecturesight check cron job"
+  cron: >
+          name="check lecturesight running"
+          user={{ ca_username }}
+          minute="*/1"
+          job="/usr/local/bin/check_lecturesight"
+  tags:
+          - cronjobs
+          - lecturesight
+          - lsinstall
+
+- name: "Append lecturesight usb camera custom nagios command to nrpe config"
+  lineinfile: >
+          dest=/etc/nagios/nrpe.cfg
+          line="command[check_ls_cam]=/usr/lib/nagios/plugins/check_disk /dev/webcam0"
+          state=present
+  tags:
+          - galicaster
+          - galicaster_config
+          - scripts
+          - nagios
+          - nagios_config
+          - galicaster_nagios
+          - lecturesight
+          - lsinstall
+          - nagios_camera
+
+- name: "Restart nagios-nrpe"
+  service: >
+          name=nagios-nrpe-server
+          state=restarted
+  tags:
+          - galicaster
+          - galicaster_config
+          - scripts
+          - nagios
+          - nagios_config
+          - galicaster_nagios
+          - lecturesight
+          - lsinstall
+          - nagios_camera
+
+- name: "Reboot if Nvidia updated"
+  command: /sbin/shutdown -r +1
+  when: nvidia.changed and ansible_connection != "local"
+  register: restarted
+  tags:
+          - lecturesight
+
+- name: Lecturesight - wait for ssh return
+  local_action: wait_for host={{ ansible_ssh_host }} port=22 state=started delay=90
+  when: restarted.changed
+  tags:
+          - lecturesight

@@ -1,0 +1,96 @@
+import requests
+import csv
+import fcntl, socket, struct
+import subprocess
+import time
+import os
+
+'''
+Create and start and ssh tunnel service based on a MAC address lookup to assign the correct tunnelling port
+cronjob to run this at boot:
+@reboot /usr/bin/python /usr/local/bin/setupCATunnel.py
+wifi-agents.txt formatting is csv:
+mac1,mac2,port,env
+fc:aa:14:20:b7:28,fc:aa:14:20:b7:2a,14302,production
+'''
+
+OPS_STAGE = '{{home_staging_server}}'
+OPS_PROD = '{{home_server}}'
+WIFI_CSV = '{{ repo_hostname }}{{ deploy_environment }}/wifi-agents.txt'
+WIFI_USER = 'galicaster'
+
+# badly wait for everything to come up
+time.sleep(10)
+
+def getHwAddr(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', ifname[:15]))
+    return ':'.join(['%02x' % ord(char) for char in info[18:24]])
+
+
+
+def getHwlist():
+    # all the interfaces except for lo
+    hwlist = []
+    interfaces = os.listdir('/sys/class/net/')
+    print interfaces
+    for i in interfaces:
+        if i != 'lo':
+            try:
+                hwadd = getHwAddr(i)
+            except IOError:
+                # print 'no device'
+                hwadd = None
+            hwlist.append(hwadd)
+    return hwlist
+
+r = requests.get(WIFI_CSV)
+
+c = csv.DictReader(r.text.splitlines())
+
+wifi_port = 7777
+wifi_env = 'ops.ocstage.man.ac.uk'
+hwlist = getHwlist()
+for row in c:
+    for i,k in row.iteritems():
+        # if one of the macs is in the list of interfaces get the wifi port for that ca
+        if k in hwlist:
+            wifi_port = row['port']
+            if row['env'] == 'production':
+                wifi_env = OPS_PROD
+            else:
+                wifi_env = OPS_STAGE
+
+# print wifi_port
+wifi_mon = int(wifi_port) +1
+service_template = """[Unit]
+ Description=AutoSSH service for a reverse tunnel from Capture Agent to Home host
+ After=network.target
+
+[Service]
+ User=galicaster
+ Environment="AUTOSSH_GATETIME=0"
+ ExecStart=/usr/bin/autossh -M {} -N -T -q -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o StrictHostKeyChecking=no -i /home/{}/.ssh/id_rsa.tunnel -R {}:localhost:22 home@{}
+
+[Install]
+ WantedBy=multi-user.target""".format(wifi_mon, WIFI_USER, wifi_port, wifi_env)
+
+# stop current systemd service
+subprocess.Popen(["systemctl", "stop", "ca-autossh.service"])
+time.sleep(3)
+service_file = open('/etc/systemd/system/ca-autossh.service', 'w')
+service_file.write(service_template)
+service_file.close()
+#remove if 7777
+if wifi_port == 7777:
+    subprocess.Popen(["systemctl", "disable", "ca-autossh.service"])
+    time.sleep(3)
+    subprocess.Popen(["systemctl", "daemon-reload"])
+    time.sleep(3)
+    subprocess.Popen(["systemctl", "stop", "ca-autossh.service"])
+else:
+    #restart the service
+    subprocess.Popen(["systemctl", "daemon-reload"])
+    time.sleep(3)
+    subprocess.Popen(["systemctl", "start", "ca-autossh.service"])
+time.sleep(3)

@@ -1,0 +1,199 @@
+## capture-agent-reinstall/tasks
+---
+# Before running the reinstall check there are no pending galicaster mediapackage ingests
+- name: "install xpath package"
+  apt: >
+          pkg=libxml2-utils
+          state=present
+          update_cache=yes
+
+- name: checking for pending ingests
+  shell: xmllint --xpath 'string(//galicaster/operations/operation[@key="ingest"]/status/text())' /home/{{ca_username}}/Repository/gc_*/galicaster.xml | grep -c '1\|6'
+  ignore_errors: yes
+  register: ingests
+
+# - debug: msg="{{ ingests }}"
+
+# Fail the playbook if ingests pending
+- fail:
+    msg: "Nightly ingests are pending on the capture agent cancelling..."
+  when: ingests.stdout == '1'
+
+- name: swap - disable swap
+  command: swapoff -a
+  tags:
+          - swap
+          - disk
+
+- name: disk - umount iso storage
+  mount:
+    name: /media/iso
+    src: /dev/sda{{ partnum }}
+    fstype: ext4
+    state: unmounted
+  tags:
+          - disk
+
+- name: disk - delete swap partition
+  command: parted /dev/sda -s rm {{ partnum }}
+  tags:
+          - parted
+          - disk
+# parted /dev/sda print | awk 'NR==7''{print $3}'
+- name: disk - get end of first partition
+  shell: parted -s /dev/sda print |  awk '/^Number/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $3); print $3}' | sed -n {{ partedline }}p
+  register: part_end
+  tags:
+          - parted
+          - disk
+
+- name: disk - make a new partition
+  command: parted /dev/sda -s -a optimal mkpart primary ext4 {{ part_end.stdout }} 100%
+  tags:
+          - parted
+          - disk
+# swapoff again??
+- name: swap - disable swap
+  command: swapoff -a
+  tags:
+          - swap
+          - disk
+
+- name: disk - umount iso storage
+  mount:
+    name: /media/iso
+    src: /dev/sda{{ partnum }}
+    fstype: ext4
+    state: unmounted
+  tags:
+          - disk
+
+- name: disk - create filesystem
+  command: mkfs.ext4 -F /dev/sda{{ partnum }}
+  tags:
+          - parted
+          - disk
+
+- name: iso - create iso storage
+  file:
+    path: /media/iso
+    state: directory
+  tags:
+          - iso
+
+- name: iso - mount iso storage
+  mount:
+    name: /media/iso
+    src: /dev/sda{{ partnum }}
+    fstype: ext4
+    state: mounted
+  tags:
+          - iso
+
+- name: iso - mount iso storage in fstab
+  mount:
+    name: /media/iso
+    src: /dev/sda{{ partnum }}
+    fstype: ext4
+    state: present
+  tags:
+          - iso
+
+- name: swap - remove current swaps from fstab
+  lineinfile:
+    dest: /etc/fstab
+    regexp: '^\S+\s+none\s+swap*'
+    state: absent
+  tags:
+          - swap
+
+- name: grub - add custom grub bootloader entry at first entry in grub.cfg
+  template:
+    src: 09_custom.j2
+    dest: /etc/grub.d/09_custom
+    mode: 755
+  tags:
+          - grub
+
+- action: uri url={{ repo_hostname }}{{ deploy_environment }}/{{ ubuntu_iso }}.md5.txt return_content=yes
+  register: hash
+  tags:
+          - iso
+
+- debug: msg="{{ hash.content[0:32] }}"
+  tags:
+          - iso
+
+- name: iso - download iso with check (md5)
+  get_url: >
+    force=yes
+    url={{ repo_hostname }}{{ deploy_environment }}/{{ ubuntu_iso }}
+    dest=/media/iso/ubuntu-16-04-desktop-custom-0.1.iso
+    checksum=md5:{{ hash.content[0:32] }}
+    use_proxy=no
+  tags:
+          - iso
+
+- name: grub - configure default boot option to be first in the menu entries
+  lineinfile:
+    dest: /etc/default/grub
+    regexp: GRUB_DEFAULT=*
+    line: GRUB_DEFAULT=0
+  tags:
+          - install-boot
+
+- name: grub - configure grub to always show for manual recovery
+  lineinfile:
+    dest: /etc/default/grub
+    regexp: GRUB_HIDDEN_TIMEOUT=*
+    line: GRUB_HIDDEN_TIMEOUT=
+  tags:
+          - install-boot
+
+- name: grub - configure grub longer timeout for manual recovery
+  lineinfile: >
+          dest=/etc/default/grub
+          regexp="GRUB_TIMEOUT=*"
+          line="GRUB_TIMEOUT=10"
+  tags:
+          - install-boot
+
+- name: grub - update grub
+  shell: update-grub
+  tags:
+          - install-boot
+
+# - name: reboot
+#   shell: hostname
+#   register: reboot_capture_agent
+#   ignore_errors: True
+#
+# - debug: msg="{{ reboot_capture_agent.stdout }}"
+
+## restarting
+- name: install - reboot and start install
+  shell: sleep 2 && /sbin/reboot
+  async: 1
+  poll: 0
+  # when: reboot_capture_agent.changed
+  ignore_errors: true
+  # register: restarted
+  tags:
+          - install
+# this waiting method doesnt work
+- name: install - wait for ssh return
+  local_action:
+    module: wait_for
+      host={{ ansible_ssh_host }}
+      port={{ ansible_ssh_port }}
+      delay=700
+      state=started
+      timeout=1000
+  tags:
+          - install
+
+# install - pause until installed
+- pause:
+    minutes: 1
+  tags:
+          - install

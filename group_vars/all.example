@@ -1,0 +1,54 @@
+---
+# group_vars/all example file. this file should be encrypted for the obvious security problems. see ansible vault
+# OS username
+ca_username:
+
+# Opencast credentials
+GC_matterhorn_host :
+GC_staging_matterhorn_host :
+GC_matterhorn_user :
+GC_matterhorn_password :
+GC_matterhorn_workflow :
+
+# Wireless credentials
+eduroam_user:
+eduroam_password:
+home_server:
+home_server_user:
+home_staging_server:
+home_staging_server_user:
+
+# nagios
+nagios_server:
+nagios_server_user:
+
+# peakaboo setting and credentials
+peakaboo_meteor:
+peakaboo_staging_meteor:
+peakaboo_user:
+peakaboo_password:
+peakaboo_http:
+peakaboo_staging_http:
+
+# proxy servers, CA vnc password and private deb repository uri.
+http_proxy_server:
+https_proxy_server:
+ca_vnc_password:
+deb_repo_hostname:
+repo_hostname:
+
+# file name of the ubuntu iso to install
+ubuntu_iso:
+
+# rtp camera settings
+rtp_user:
+rtp_pass:
+rtp_default_ip:
+rtp_port:
+
+# ip camera onvif connectivity settings
+onvif_user:
+onvif_pass:
+
+# youtube live stream key for livestreaming
+youtube_stream_key:

@@ -1,0 +1,188 @@
+## galicaster-capture-agent-wifi/tasks
+---
+# EDUROAM CONFIGURATION
+- name: "Get wifi card"
+  shell: lspci | grep 'Network controller'
+  ignore_errors: yes
+  register: wifi_card
+  tags:
+          - wifi
+
+- name: "Disable wifi N if using Intel 7260 Card"
+  shell: echo "options iwlwifi 11n_disable=1" >> /etc/modprobe.d/iwlwifi.conf
+  when: wifi_card.stdout.find('7260') != -1
+  tags:
+          - wifi
+
+- name: "Copy eduroam NM system file"
+  template: >
+          src=eduroam.j2
+          dest=/etc/NetworkManager/system-connections/eduroam
+          mode=600
+  tags:
+          - wifi
+
+# REVERSE SSH TUNNEL CONFIGURATION
+- name: "set home server if staging"
+  set_fact:
+    home_server: "{{ home_staging_server }}"
+    home_server_user: "{{ home_staging_server_user }}"
+  when: deploy_environment is defined and deploy_environment == 'staging'
+  tags:
+          - wifi
+
+- name: "Install autossh package"
+  apt: >
+          pkg={{ item }}
+          state=present
+  with_items:
+          - autossh
+  tags:
+          - wifi
+
+# - name: "Setup hosts.allow localhost"
+#   lineinfile: >
+#           dest=/etc/hosts.allow
+#           line="sshd: localhost"
+#           insertafter=EOF
+#           state=present
+#   tags:
+#           - wifi
+
+- name: "Config CA user's SSH tunnel private key"
+  copy: >
+          src=_ssh/id_rsa.tunnel
+          dest=/home/{{ ca_username }}/.ssh/id_rsa.tunnel
+          owner={{ ca_username }}
+          group={{ ca_username }}
+          mode=600
+  tags:
+          - wifi
+
+- name: "Config CA user's nagios SSH tunnel private key"
+  copy: >
+          src=_ssh/id_rsa.nagios
+          dest=/home/{{ ca_username }}/.ssh/id_rsa.nagios
+          owner={{ ca_username }}
+          group={{ ca_username }}
+          mode=600
+  tags:
+          - wifi
+
+- name: "Config CA user's known_hosts"
+  copy: >
+          src=_ssh/known_hosts
+          dest=/home/{{ ca_username }}/.ssh/known_hosts
+          owner={{ ca_username }}
+          group={{ ca_username }}
+          mode=600
+  tags:
+          - wifi
+
+# - name: "Setup home auto-ssh reverse tunnel cron job"
+#   cron: >
+#           name="reverse ssh tunnel on reboot"
+#           special_time=reboot
+#           job='autossh -M {{ home_tunnel_port | int + 1 }} -N -f -o "PubkeyAuthentication=yes" -o "PasswordAuthentication=no" -o "StrictHostKeyChecking=no" -i /home/galicaster/.ssh/id_rsa.tunnel -R {{ home_tunnel_port }}:localhost:22 {{ home_server_user }}@{{ home_server }} &'
+#   tags:
+#           - wifi
+- name: "Setup home autossh reverse tunnel service"
+  template: >
+          src=ca-autossh.j2
+          dest=/etc/systemd/system/ca-autossh.service
+          mode=664
+  register: update_tunnel
+  tags:
+          - wifi
+
+- name: "Enable autossh tunnel service"
+  systemd: >
+          enabled=yes
+          daemon_reload=yes
+          name=ca-autossh.service
+  when: update_tunnel.changed
+  tags:
+          - wifi
+# Don't restart the autossh tunnel service as this kills ssh, thinking is if the tunnel is up, its up. unessasary to restart now
+# - name: "Restart autossh tunnel service"
+#   systemd: >
+#           state=restarted
+#           name=ca-autossh.service
+#   async: 1
+#   poll: 0
+#   when: update_tunnel.changed and ansible_connection != "local"
+#   tags:
+#           - wifi
+#           - restart_tunnel
+
+- name: Wait for ssh tunnel to restart
+  local_action: >
+    wait_for
+    host={{ ansible_ssh_host }}
+    port={{ ansible_ssh_port }}
+    delay=10
+    timeout=300
+
+- name: "configure reboot tunnel checking script"
+  template: >
+          src=setupCATunnel.j2
+          dest=/usr/local/bin/setupCATunnel.py
+          mode=755
+  tags:
+          - wifi
+
+- name: "Setup Nagios autossh reverse tunnel service"
+  template: >
+          src=nagios-autossh.j2
+          dest=/etc/systemd/system/nagios-autossh.service
+          mode=664
+  register: update_tunnel_n
+  tags:
+          - wifi
+
+- name: "Enable nagios autossh tunnel service"
+  systemd: >
+          enabled=yes
+          daemon_reload=yes
+          name=nagios-autossh.service
+  when: update_tunnel_n.changed
+  tags:
+          - wifi
+
+- name: "Restart nagios autossh tunnel service"
+  systemd: >
+          state=restarted
+          name=nagios-autossh.service
+  when: update_tunnel_n.changed and ansible_connection != "local"
+  tags:
+          - wifi
+
+- name: "kill nm-applet - stopping wifi popups"
+  cron: >
+          name="kill nm-applet"
+          user={{ ca_username }}
+          minute=0
+          job='pkill nm-applet'
+  tags:
+          - wifi
+
+# - name: "Setup nagios auto-ssh reverse tunnel cron job"
+#   cron: >
+#           name="reverse nagios ssh tunnel on reboot"
+#           user={{ ca_username }}
+#           special_time=reboot
+#           job='autossh -M {{ nagios_tunnel_port | int + 1 }} -N -T -q -f -o "PubkeyAuthentication=yes" -o "PasswordAuthentication=no" -o "StrictHostKeyChecking=no" -i /home/galicaster/.ssh/id_rsa.nagios -R {{ nagios_tunnel_port }}:localhost:5666 {{ nagios_server_user }}@{{ nagios_server }} &'
+#   tags:
+#           - wifi
+
+# overwrites CA monthly reboot
+- name: "Setup Daily reboot cron job"
+  cron: >
+          name="reboot"
+          user=root
+          minute="0"
+          hour="6"
+          job="/sbin/reboot -f"
+  tags:
+          - wifi
+          - cronjobs

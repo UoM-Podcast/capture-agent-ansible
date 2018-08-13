@@ -1,0 +1,15 @@
+#! /bin/sh
+##### ANSIBLE INFO ######
+# {{ ansible_managed }}
+##  END ANSIBLE INFO  ##
+# By default we assume only / is on an SSD.
+# You can add more SSD mount points, separated by spaces.
+# Make sure all mount points are within the quotes. For example:
+# SSD_MOUNT_POINTS='/ /boot /home /media/my_other_ssd'
+
+SSD_MOUNT_POINTS='/'
+
+for mount_point in $SSD_MOUNT_POINTS
+do
+    fstrim $mount_point
+done

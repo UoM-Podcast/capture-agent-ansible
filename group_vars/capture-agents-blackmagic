@@ -1,0 +1,7 @@
+---
+BM_version: 9.7.8
+MXP_version: 3.2.1
+
+BM_input_mode : 720p60
+BM_framerate : 30/1
+BM_location: /dev/blackmagic/dv0

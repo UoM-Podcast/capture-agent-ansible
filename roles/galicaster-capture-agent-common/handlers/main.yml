@@ -1,0 +1,5 @@
+## galicaster-capture-agent-common/handlers
+---
+
+- name: restart galicaster
+  command: /usr/local/bin/kill_gc "Configuration change" false

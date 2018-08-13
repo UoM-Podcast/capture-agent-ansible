@@ -1,0 +1,7 @@
+## galicaster-capture-agent-common/handlers
+---
+
+- name: stop lecturesight
+  shell: /usr/local/bin/kill_lecturesight "Configuration change" false
+  become: true
+  become_user: galicaster

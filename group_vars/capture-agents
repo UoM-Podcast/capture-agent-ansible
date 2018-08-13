@@ -1,0 +1,139 @@
+---
+
+deploy_environment: staging
+UOM_deb_release : "{{ 'stable' if deploy_environment == 'production' else 'testing' }}"
+ca_matterhorn_name: "{{ name_mask if name_mask is defined and name_mask else inventory_hostname }}"
+matterhorn_host: "{{ GC_staging_matterhorn_host if deploy_environment == 'staging' else GC_matterhorn_host}}"
+matterhorn_user: "{{ GC_staging_matterhorn_user if deploy_environment == 'staging' else GC_matterhorn_user }}"
+matterhorn_password: "{{ GC_staging_matterhorn_password if deploy_environment == 'staging' else GC_matterhorn_password }}"
+GC_version: "{{ 'master' if deploy_environment == 'production' else 'master' }}"
+ca_username: "andrew"
+
+ntp_server: ntp2a.mcc.ac.uk ntp2b.mcc.ac.uk ntp2c.mcc.ac.uk
+
+nagios_hosts: 127.0.0.1
+
+GC_repo: "https://github.com/teltek/Galicaster.git"
+pysca_repo: "https://bitbucket.org/uni-koeln/pysca.git"
+
+GC_send_config: False
+GC_resolution: auto
+GC_log_path : /var/log/galicaster/galicaster.log
+GC_ingest_time: immediately
+GC_location: /opt/galicaster/run_galicaster.py
+
+GC_failovermic_bool: False
+GC_failovermic_source: alsa_input.usb-Samson_Technologies_Samson_UB1-00.analog-stereo
+GC_usb_mic_source: alsa_input.usb-Samson_Technologies_Samson_UB1-00.analog-stereo
+GC_line_in_source: default
+GC_failovermic_threshold: -40
+GC_failovermic_device: 1
+GC_usb_camera_mic_source: ""
+
+GC_profilefailover_bool: False
+GC_profilefailover_device: ""
+GC_profilefailover_profile: ""
+
+GC_qrcodedropframes_bool: False
+GC_qrcode_ignore_track: ""
+
+GC_ddp_audiofader_name: Capture
+GC_ddp_audiofader_index: 0
+
+GC_message_text: Microphone Disconnected
+
+nagios_temp_sensor: temp1
+nagios_temp_warn: 75
+nagios_temp_crit: 85
+nagios_load_warn: 9.5
+nagios_load_crit: 10.0
+
+peakaboo_audio_device: ""
+peakaboo_audio_src: alsasrc
+CA_ddp: True
+CA_qrcode: True
+CA_audiostream: True
+
+ddp_token: ""
+
+max_save_mp_days: 5
+
+GC_encoder: x264enc quantizer=22 speed-preset=2
+GC_encoder_high: x264enc pass=5 quantizer=17 bitrate=5120
+
+opencl_kernel: 4.7.0.intel.r3.0
+opencl_kernel_version: 4.7
+
+rtp_ip: "{{ cam1_host if cam1_host != None else rtp_default_ip }}"
+rtp_codec: h264
+rtp_audio: aac
+rtp_muxer: mp4mux
+livestream_cmd: ffmpeg -f lavfi -i anullsrc -thread_queue_size 512 -rtsp_transport tcp -i rtsp://{{rtp_user}}:{{rtp_pass}}@{{rtp_ip}}:{{rtp_port}}/axis-media/media.amp?videocodec={{rtp_codec}} -tune zerolatency  -c:v copy -c:a aac -strict experimental -map 1:v:0 -map 1:a:0 -f flv rtmp://a.rtmp.youtube.com/live2/{{youtube_stream_key}}
+
+workflow_params: 'archiveOp:true;publishHarvesting:false'
+oc_default_series: 3bf1ef11-0fa6-4def-9dfb-45f1c7b763a8
+CA_interactive: False
+livestreaming: False
+camera_exists: False
+oc_source: "{{ 'School_Upload' if vl_public == 'true' or vl_private_ep_acl else None}}"
+
+DP_driver: False
+
+# Lecturesight Config Defaults
+ls_settings_saved: False
+# Visca device PTZ camera is connected to
+visca_dev: ttyUSB0
+# VAPIX config
+default_axis_user: "root"
+default_axis_pass: "pass"
+vapix_inverted: false
+vapix_camera_capture_mode: 1080p25
+vapix_camera_ircutfilter: "on"
+vapix_camera_led: "off"
+vapix_stream_fps: 25
+vapix_stream_maxrate: 0
+vapix_stream_ratemode: cbr
+vapix_stream_priority: framerate
+vapix_stream_targetbit: 6000
+vapix_stream_iframes: 1
+vapix_stream_pframes: 24
+vapix_stream_compression: 5
+vapix_stream_resolution: 1280x720
+vapix_video_rotation: "{{ '180' if vapix_inverted == 'true' else '0'}}"
+# OpenCL change detection threshold
+change_threshold: 48
+# PTZ Camera movement parameters
+move_damp_pan: 0.4
+move_damp_tilt: 0.5
+move_alpha_x: 200
+move_alpha_y: 400
+move_stop_x: 25
+move_stop_y: 25
+# Overview camera scene size limits
+scene_limit_left: -4500
+scene_limit_right: 4500
+scene_limit_top: 2000
+scene_limit_bottom: -3000
+# PTZ pan-tilt starting parameters
+ptz_pan: 0.0
+ptz_tilt: 0.0
+ptz_zoom: 0.1
+ptz_tilt_lock: true
+ptz_tilt_offset: 0.0
+# Camera frame size as [0.0:2.0]
+ptz_frame_width: 0.5
+ptz_frame_height: 0.5
+# Integration with ICal from galicaster
+scheduler_enable: 'false'
+scheduler_schedule_file: /home/galicaster/Repository/attach/calendar.ical
+scheduler_timezone_offset: 1
+scheduler_tracker_leadtime: 1
+
+CA_camctrl: False
+CA_vapixctrl: False
+CA_ckaud: True
+oc_trim_default: "true"
+nfclock: False
+peakaboolive: False
+rtmp_host: ''
+GC_custom_rec_title: ''

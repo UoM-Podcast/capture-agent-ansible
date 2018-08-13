@@ -1,0 +1,118 @@
+---
+- hosts: capture-agents
+  remote_user: root
+  roles:
+      - capture-agent-common
+      - galicaster-capture-agent-common
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents-blackmagic
+  remote_user: root
+  roles:
+      - galicaster-capture-agent-blackmagic-common
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents-datapath
+  remote_user: root
+  roles:
+      - galicaster-capture-agent-datapath-common
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents-blackmagic-usb:capture-agents-datapath-usb:capture-agents-datapath-axis-usb
+  remote_user: root
+  roles:
+      - galicaster-capture-agent-usb
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents-blackmagic-split:capture-agents-datapath-split
+  remote_user: root
+  roles:
+      - galicaster-capture-agent-split
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents-blackmagic-split-wifi:capture-agents-datapath-split-wifi:capture-agents-blackmagic-usb-wifi:capture-agents-datapath-usb-wifi
+  remote_user: root
+  roles:
+      - galicaster-capture-agent-wifi
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents-dual-datapath-split-lecturesight:capture-agents-datapath-split-lecturesight:capture-agents-datapath-usb-lecturesight:capture-agents-datapath-axis-muxed-lecturesight:capture-agents-datapath-axis-split-lecturesight:capture-agents-datapath-axis-usb-lecturesight
+  remote_user: root
+  roles:
+      - lecturesight-capture-agent-common
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents-axis:capture-agents-datapath-axis-muxed-lecturesight:capture-agents-datapath-axis-muxed:capture-agents-datapath-axis-split-lecturesight:capture-agents-datapath-axis-split:capture-agents-datapath-axis-usb
+  remote_user: root
+  roles:
+      - datapath-axis-common
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents-v4l2-x2-axis-muxed
+  remote_user: root
+  roles:
+      - v4l2-axis-common
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents-v4l2-split:capture-agents-v4l2-usb
+  remote_user: root
+  roles:
+      - v4l2-common
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents-v4l2-x2-axis-muxed:capture-agents-axis:capture-agents-datapath-axis-muxed-lecturesight:capture-agents-datapath-axis-muxed:capture-agents-datapath-axis-split-lecturesight:capture-agents-datapath-axis-split:capture-agents-datapath-axis-usb
+  remote_user: root
+  roles:
+      - vapix-common
+
+- hosts: capture-agents:!capture-agents-blackmagic-split-wifi:!capture-agents-datapath-split-wifi:!capture-agents-blackmagic-usb-wifi:!capture-agents-datapath-usb-wifi
+  remote_user: root
+  roles:
+    - capture-agent-not-wifi
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents
+  remote_user: root
+  roles:
+    -  { role: capture-agent-interactive, when: CA_interactive == True }
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents
+  remote_user: root
+  roles:
+    -  { role: obs-capture-agent-common, when: install_obs|default(false)}
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"
+
+- hosts: capture-agents
+  remote_user: root
+  roles:
+    - capture-agent-end
+  environment:
+    http_proxy: "{{ http_proxy_server }}"
+    https_proxy: "{{ https_proxy_server }}"

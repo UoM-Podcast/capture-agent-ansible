@@ -1,0 +1,37 @@
+---
+
+- name: VAPIX process
+  pause:
+    seconds: 5
+  tags:
+        - vapix
+
+- name: VAPIX Restart
+  uri:
+    url: "http://{{rtp_ip}}/axis-cgi/restart.cgi"
+    method: GET
+    user: "{{ rtp_user }}"
+    password: "{{ rtp_pass }}"
+    status_code: 200
+  tags:
+        - vapix
+
+- name: VAPIX pause
+  pause:
+    seconds: 5
+  tags:
+        - vapix
+
+- name: VAPIX restart wait
+  uri:
+   url: "http://{{rtp_ip}}/axis-cgi/jpg/image.cgi"
+   method: GET
+   status_code: 200
+   user: "{{ rtp_user }}"
+   password: "{{ rtp_pass }}"
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 1
+  tags:
+        - vapix

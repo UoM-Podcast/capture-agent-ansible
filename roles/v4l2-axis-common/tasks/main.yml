@@ -1,0 +1,40 @@
+---
+
+- name: Get RTP camera network interface
+  set_fact:
+    rtp_nic: "{{ansible_interfaces[nic_number | int] if ansible_interfaces[nic_number | int] != ansible_default_ipv4.interface else ansible_interfaces[1]}}"
+  tags:
+            - axis
+            - network
+
+- debug: msg="{{rtp_nic}}"
+  tags:
+            - axis
+            - network
+
+- name: Create interfaces for DHCP LAN and static direct connection to camera
+  template: >
+          src=axis-network.j2
+          dest=/etc/network/interfaces
+          mode=600
+  tags:
+          - axis
+          - network
+
+- name: "Datapath and Camera Profiles"
+  template: >
+         src=profiles/{{ item }}
+         dest=/etc/galicaster/profiles/{{ item }}
+         group={{ ca_username }}
+         owner={{ ca_username }}
+  with_items:
+         - v4l2-x2-axis-muxed.ini
+         - v4l2-x2-embedded-axis.ini
+         - axis-muxed.ini
+  # notify: restart galicaster
+  tags:
+         - galicaster
+         - galicaster_config
+         - galicaster_profiles
+         - datapath
+         - axis

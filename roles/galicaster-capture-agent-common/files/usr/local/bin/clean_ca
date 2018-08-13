@@ -1,0 +1,24 @@
+#!/bin/bash
+logfile=/var/log/galicaster/galicaster-deletes.log
+
+folder=/home/galicaster/Repository/rectemp/*
+folder2=/home/galicaster
+export PATH=/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
+
+for i in `find $folder -type d -ctime +5`
+do
+	title="Deleting rectemp files $i"
+	echo `date +"%F %T"` $title >> $logfile
+	rm -rf $i
+done
+
+for j in `find $folder2 -type d -name "gc_merge*" -ctime +7`
+do
+	dsize=`df -h /dev/sda1 | awk 'NR==2 { print $5 }'`
+	nop=${dsize:0:2}
+	if [ "$nop" -gt 70 ]
+	then
+		echo `date +"%F %T"` $j >> $logfile
+		rm -rf $j
+	fi
+done

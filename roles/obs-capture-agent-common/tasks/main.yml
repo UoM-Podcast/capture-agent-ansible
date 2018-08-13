@@ -1,0 +1,119 @@
+## obs-capture-agent-common/tasks
+---
+
+- name: "Add obs-studio apt sources"
+  become_method: sudo
+  apt_repository: >
+          update_cache=yes
+          repo="ppa:obsproject/obs-studio"
+          state=present
+  tags:   obs
+
+- name: "Create obs settings directory"
+  file: >
+          path=.config/obs-studio
+          state=directory
+          group={{ ca_username }}
+          owner={{ ca_username }}
+          recurse=yes
+  tags:
+          - obs
+          - obs_settings
+
+- name: "Install obs-studio with support packages"
+  apt: >
+          pkg={{ item }}
+          update_cache=yes
+          state=latest
+          force=yes
+  with_items:
+          - ffmpeg
+          - obs-studio
+  tags:
+          - obs
+
+- name: "Copy obs settings"
+  copy: >
+          src=_{{ item }}
+          dest=/home/{{ ca_username }}/.{{ item }}
+          group={{ ca_username }}
+          owner={{ ca_username }}
+          mode=755
+  with_items:
+          - config/obs-studio/
+  tags:
+          - obs
+          - obs_settings
+
+- name: "Copy obs scripts"
+  template: >
+          src={{item}}.j2
+          dest=/usr/local/bin/{{item}}
+          mode=755
+  with_items:
+          - kill_obs
+          - obs_auto
+          - check_obs
+  tags:
+          - obs
+
+- name: "Copy obs service templates"
+  template: >
+          src={{item}}.j2
+          dest=/home/{{ ca_username }}/.config/obs-studio/basic/profiles/dual/{{item}}
+          mode=755
+  with_items:
+          - service.json
+  tags:
+          - obs
+          - obs_settings
+
+- name: "Copy obs Scene templates"
+  template: >
+          src={{item}}.j2
+          dest=/home/{{ ca_username }}/.config/obs-studio/basic/scenes/{{item}}
+          mode=755
+  with_items:
+          - mediatechscene.json
+  tags:
+          - obs
+          - obs_settings
+
+- name: "Setup CA user's autostarts"
+  template: >
+          src=run_obs.desktop.j2
+          dest=/home/{{ ca_username }}/.config/autostart/run_obs.desktop
+          owner={{ ca_username }}
+          group={{ ca_username }}
+          mode=0644
+  tags:
+           - obs
+
+- name: "Setup obs kill cron job"
+  cron: >
+         name="kill obs"
+         user={{ ca_username }}
+         minute="{{ 30 | random }}"
+         hour="23"
+         job="/usr/local/bin/kill_obs"
+  tags:
+         - obs
+
+- name: "Setup obs Restart cron job"
+  cron: >
+          name="restart obs"
+          user={{ ca_username }}
+          minute="{{ 30 | random }}"
+          hour="8"
+          job="/usr/local/bin/obs_auto"
+  tags:
+          - obs
+
+- name: "Setup obs check cron job"
+  cron: >
+          name="check obs running"
+          user={{ ca_username }}
+          minute="*/1"
+          job="/usr/local/bin/check_obs"
+  tags:
+          - obs

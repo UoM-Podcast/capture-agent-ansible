@@ -1,0 +1,71 @@
+#!/bin/bash
+##### ANSIBLE INFO ######
+# {{ ansible_managed }}
+##  END ANSIBLE INFO  ##
+logfile=/var/log/galicaster/galicaster-restarts.log
+gclogfile={{ logfile }}
+gchome=/home/galicaster/Repository/rectemp
+file_write_period=10
+
+export PATH=/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
+export DISPLAY=:0
+
+ut=`cat /proc/uptime`
+ot=${ut% *}
+if [ ${ot%.*} -gt 600 ]
+then
+	if [ -e $gclogfile ]
+	then
+		u=`stat -c%Y "$gclogfile"`
+		v=`date +%s`
+		let z=$v-$u
+		echo $z
+		if [ $z -gt 300 ]
+		then
+			x=`ps -eo pid,args | grep galicaster | grep python | grep -v grep | awk '{ print $1 }'`
+			if [ "$x" != "" ]
+			then
+				echo "galicaster did not log for 5 min -> killed `date`" >> $logfile
+				kill -9 $x
+			fi
+		fi
+	fi
+	nc=`ps -ef | grep galicaster | grep -c python`
+	if [ $nc -eq 0 ]
+	then
+		echo galicaster restarted `date` >> $logfile
+	       # /usr/bin/galicaster
+		python {{ GC_location }}
+	fi
+
+	if [ ! -e "$gchome/paused" ]
+	then
+	    c=0;
+	    sleep 5;
+	    for i in presentation.avi presenter.mp3 presenter.aac; do
+		f="$gchome/$i"
+		if [ -e $f ]
+		then
+		    a=`ls --block-size=1 -s $f | awk '{ print $1 }'`
+		    sleep $file_write_period;
+		    b=`ls --block-size=1 -s $f | awk '{ print $1 }'`
+		    if [ "$a" != "$b" ] || [ -e "$gchome/paused" ]
+		    then
+			exit 0
+		    fi
+		    if [ "$a" != "0" ]
+		    then
+			x=`ps -eo pid,args | grep galicaster | grep python | grep -v grep | awk '{ print $1 }'`
+			if [ "$x" != "" ]
+			then
+			    echo "galicaster temp file does not grow -> killed `date`" >> $logfile
+			    kill -9 $x
+			    echo galicaster restarted `date` >> $logfile
+			   # /usr/bin/galicaster
+                python {{ GC_location }}
+			fi
+		    fi
+		fi
+	    done
+	fi
+fi

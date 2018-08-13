@@ -1,0 +1,11 @@
+#!/bin/bash
+
+blink_status=`blinkstick -i | awk 'NR==5'`
+if [[ $blink_status == '' ]]
+then
+	echo "CRITICAL - unplugged!"
+	exit 2
+else
+	echo "OK $blink_status"
+	exit 0
+fi

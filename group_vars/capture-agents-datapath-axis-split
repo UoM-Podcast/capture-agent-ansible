@@ -1,0 +1,34 @@
+---
+
+GC_encoder: vaapipostproc ! vaapih264enc rate-control=cbr bitrate=2000
+GC_encoder_high: vaapipostproc ! vaapih264enc rate-control=cbr bitrate=6000
+
+rtp_codec: h264
+rtp_audio: aac
+rtp_muxer: mp4mux
+livestream_cmd: ffmpeg -f v4l2 -framerate 30 -video_size hd720 -input_format yuyv422 -thread_queue_size 512 -i /dev/datapath0 -f alsa -ac 2 -thread_queue_size 512 -i pulse -f lavfi -i anullsrc -thread_queue_size 512 -rtsp_transport tcp -i rtsp://{{rtp_user}}:{{rtp_pass}}@{{rtp_ip}}:{{rtp_port}}/axis-media/media.amp?videocodec=h264 -tune zerolatency -filter_complex "[0:v:0]pad=iw*2:ih[v];[v][3:v:0]overlay=w" -vcodec libx264 -preset veryfast -crf 17 -b:v 6000k -c:a libmp3lame -ar 44100 -f flv rtmp://a.rtmp.youtube.com/live2/{{youtube_stream_key}}
+
+
+GC_profile: Screen and Camera and Split Audio
+
+GC_matterhorn_workflow: manchester-sidebyside
+GC_resolution: auto
+
+GC_qrcode_ignore_track: camera
+
+max_save_mp_days: 14
+
+nagios_temp_sensor: '"Core 0"'
+nagios_load_warn: 14.0
+nagios_load_crit: 19.0
+
+livestreaming: True
+
+GC_send_config: True
+
+GC_checkaudiosource_low_alert: -50
+GC_checkaudiosource_check_recording: True
+
+CA_camctrl: False
+CA_vapixctrl: True
+camera_exists: True

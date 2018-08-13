@@ -1,0 +1,176 @@
+##### ANSIBLE INFO ######
+# {{ ansible_managed }}
+##  END ANSIBLE INFO  ##
+[basic]
+profile = {{ GC_profile }}
+resolution = {{ GC_resolution }}
+homepage = rec
+quit = False
+
+[logger]
+path = {{ logfile }}
+
+[recorder]
+autorecover = True
+pausetype = recording
+{{GC_custom_rec_title}}
+
+[repository]
+recoverytype = {{ 'full' if CA_interactive else 'save'}}
+
+[ingest]
+active = True
+visible_tracks = {{ GC_send_config }}
+host = {{ matterhorn_host }}
+username = {{ matterhorn_user }}
+password = {{ matterhorn_password }}
+workflow = {{ matterhorn_workflow }}
+workflow-parameters = {{ workflow_params }}
+manual = immediately
+scheduled = {{ ingest_time }}
+hostname = {{ ca_matterhorn_name }}
+address = {{ ip_address }}
+multiple-ingest = True
+random-ingest = True
+stop-admin-ingest = True
+connect_timeout = 60
+timeout = 60
+
+[plugins]
+noaudiodialog = False
+appearance = True
+checkrepo = True
+checkvideo = True
+retryingest = True
+cleanstale = True
+failovermic = {{ failovermic_bool }}
+qrcode = {{CA_qrcode}}
+changemp = {{ CA_interactive if CA_interactive else False}}
+profilefailover = {{ profilefailover_bool }}
+gcnagios = True
+ddp = {{CA_ddp}}
+audiostream = {{CA_audiostream}}
+handleerror = True
+backuprepo = False
+gcmail = True
+gcblinkstick = {{ blinkstick }}
+camctrl = {{ CA_camctrl }}
+vapixctrl = {{ CA_vapixctrl }}
+livestream = {{ livestreaming }}
+checkaudiosource = {{ CA_ckaud }}
+nfclock = {{ nfclock }}
+peakaboolive = {{ peakaboolive }}
+
+[heartbeat]
+night = {{ ['20','21','22','23','00','01','02','03','04'] | random }}:{{ 5 | random }}{{ 9 | random }}
+short = 60
+long = 600
+
+[backuprepo]
+mount_point = /mnt/backup-repo
+nas_path = /
+
+[retryingest]
+check_ingested = False
+check_published = False
+check_state = True
+check_after = 1800
+nightly = True
+
+[cleanstale]
+maxarchivaldays = {{ max_save_mp_days }}
+
+[failovermic]
+device = {{ failovermic_source }}
+failover_threshold = {{ GC_failovermic_threshold }}
+audio_device = {{ GC_failovermic_device }}
+
+[qrcode]
+pause_mode = hold
+hold_code = pause
+finish_code = finish
+rescale = 640x360
+mp_add_edits = True
+mp_force_trimhold = False
+mp_add_smil = True
+drop_frames = True
+ignore_track_name = {{ GC_qrcode_ignore_track }}
+finish_timeframe = 30
+finish_show_time = 10
+notify_email = True
+hold_early = 1
+edit_mode = direct
+
+[checkrepo]
+delay_merge = True
+
+[changemp]
+set-series = {{ oc_default_series }}
+set-source = {{ oc_source }}
+
+[allows]
+overlap = False
+
+[profilefailover]
+usb-device = {{ profilefailover_device }}
+failover-profile = {{ profilefailover_profile }}
+normal-profile = {{ GC_profile }}
+
+[handleerror]
+match_start = None
+match_start_notifyonly = Error starting Galicaster: org.freedesktop.DBus.Error.NoReply: Did not receive a reply.;gst-resource-error-quark: Failed to connect stream: No such entity;gst-resource-error-quark: Cannot identify device;Internal GStreamer error: negotiation problem;GStreamer encountered a general resource error
+match_end = The buffer type is not supported, or the index is out of bounds, or no buffers have been allocated yet, or the userptr or length are invalid. device /dev/video0)
+killscript = /usr/local/bin/kill_gc
+
+[ddp]
+meteor = {{ peakaboo_meteor }}
+room_name = {{ ca_matterhorn_name }}
+cam_available = {{ camera_exists }}
+cam_auth_user = {{rtp_user}}
+cam_auth_pass = {{rtp_pass}}
+rtmp_host = {{rtmp_host}}
+user = {{ peakaboo_user }}
+password = {{ peakaboo_password }}
+http_host = {{ peakaboo_http }}
+audiofaders = capture
+support_group = {{ GC_support_group }}
+take_screenshot = True
+hq_snapshot = False
+existing_stream_host =
+existing_stream_port =
+existing_stream_key =
+extra_params =
+existing_screenshot =
+token = {{ ddp_token }}
+
+[audiostream]
+port = 31337
+src = {{ peakaboo_audio_src }}
+device = {{ peakaboo_audio_device }}
+
+[gcmail]
+from_address = example@manchester.ac.uk
+smtp_server = example.man.ac.uk
+
+[gcblinkstick]
+rec_color = #ff0000
+pause_color = #ff0000
+pause_delay = 1000
+upcoming_color = #ffff00
+
+[camctrl]
+backend = onvif
+ip = {{rtp_ip}}
+username = {{onvif_user}}
+password = {{onvif_pass}}
+web_username = {{rtp_user}}
+web_password = {{rtp_pass}}
+port = 80
+
+[livestream]
+livestream_ffmpeg = {{livestream_cmd}}
+camera = {{CA_camctrl}}
+
+[checkaudiosource]
+low_alert = {{GC_checkaudiosource_low_alert}}
+check_recording = {{GC_checkaudiosource_check_recording}}

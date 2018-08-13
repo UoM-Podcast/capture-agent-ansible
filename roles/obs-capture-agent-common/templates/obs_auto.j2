@@ -1,0 +1,5 @@
+#!/bin/bash
+# pause to make sure the capture card driver has loaded and network is up
+sleep 5
+export DISPLAY=:0
+obs  --collection mediatechscene --startstreaming

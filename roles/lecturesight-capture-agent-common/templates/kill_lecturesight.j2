@@ -1,0 +1,30 @@
+#!/bin/bash
+
+reason=$1
+restart=$2
+
+export PATH=/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
+export DISPLAY=:0
+
+echo -n "Stopping LectureSight: "
+
+LS_PID=`ps aux | grep java | awk '/lecturesight/ && !/awk/ {print $2}'`
+if [ -z "$LS_PID" ]; then
+  echo "LectureSight already stopped"
+fi
+
+kill $LS_PID
+
+sleep 10
+
+LS_PID=`ps aux | grep java | awk '/lecturesight/ && !/awk/ {print $2}'`
+if [ ! -z $LS_PID ]; then
+  echo "Hard killing since felix ($LS_PID) seems unresponsive to regular kill"
+  kill -9 $LS_PID
+fi
+
+echo "done."
+
+if [ "${restart}" != "false" ] ; then
+  /usr/bin/lecturesight
+fi

@@ -1,0 +1,34 @@
+#!/bin/bash
+##### ANSIBLE INFO ######
+# {{ ansible_managed }}
+##  END ANSIBLE INFO  ##
+logfile=microphone.log
+unplugged_file=/var/www/no_mic
+
+subsys=${SUBSYSTEM}
+maj=${MAJOR}
+min=${MINOR}
+act=${ACTION}
+machine=`grep "" /etc/ca_hostname`
+m_date="[`date`] (${machine##* })"
+
+if [ "$subsys" = "sound" ]
+then
+	if [ $maj = "116" ]
+	then
+		if [ "$act" = "add" ]
+		then
+			x=`lsusb | grep -w "ID 17a0:0101"`
+			y=${x:20}
+			echo "$m_date - Microphone safely plugged in: $y" | "cat >> $logfile"
+			if [ -e $unplugged_file ]
+			then
+				rm $unplugged_file
+			fi
+		else
+			echo "$m_date - Microphone unplugged" | "cat >> $logfile"
+			echo "$m_date - Microphone unplugged" >> $unplugged_file
+			chmod 644 $unplugged_file
+		fi
+	fi
+fi

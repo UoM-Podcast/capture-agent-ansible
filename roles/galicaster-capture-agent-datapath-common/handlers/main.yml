@@ -1,0 +1,4 @@
+## galicaster-capture-agent-datapath/handlers
+---
+- name: restart galicaster
+  command: /usr/local/bin/kill_gc "Datapath driver or profiles update" false

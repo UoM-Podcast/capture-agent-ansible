@@ -1,0 +1,11 @@
+[Unit]
+ Description=AutoSSH service for a reverse tunnel from Capture Agent to Nagios Monitoring server
+ After=network.target
+
+[Service]
+ User={{ ca_username }}
+ Environment="AUTOSSH_GATETIME=0"
+ ExecStart=/usr/bin/autossh -M {{ nagios_tunnel_port | int + 1 }} -N -T -q -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o StrictHostKeyChecking=no -i /home/galicaster/.ssh/id_rsa.nagios -R {{ nagios_tunnel_port }}:localhost:5666 {{ nagios_server_user }}@{{ nagios_server }}
+
+[Install]
+ WantedBy=multi-user.target

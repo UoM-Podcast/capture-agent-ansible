@@ -1,0 +1,30 @@
+#!/bin/bash
+
+logfile=/var/log/galicaster/galicaster-restarts.log
+
+# ip=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}' | head -1`
+# gwbegin=`echo $ip | cut -d "." -f 1-3`
+# gwend=".250"
+# gateway=$gwbegin$gwend
+
+gateway=`ip -4 route list 0/0 | cut -d ' ' -f 3`
+
+nm-online -q 2> /dev/null
+
+if [ $? -eq 1 ]; then
+    echo "Network interface down, rebooting capture agent" `date` >> $logfile
+    sudo reboot
+    exit 1
+fi
+if [[ "$gateway" == "" ]]; then
+    echo "could not reach gateway, rebooting capture agent" `date` >> $logfile
+    sudo reboot
+    exit 1
+fi
+if [[ "$(ping -c 3 "$gateway" | grep '100% packet loss' )" != "" ]] || [[ "$(ping -c 3 "$gateway" | grep 'connect: Network is unreachable' )" != "" ]]; then
+    echo "Ping timed out, rebooting capture agent" `date` >> $logfile
+    sudo reboot
+    exit 1
+else
+    exit 0
+fi

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# reboot via kernel panic if the CA has a really high load
+# trigger at load of 20
+trigger=20
+load=`cat /proc/loadavg | awk '{print $1}'`
+sleep 5;
+load_wait=`cat /proc/loadavg | awk '{print $1}'`
+response=`echo | awk -v T=$trigger -v L=$load 'BEGIN{if ( L > T){ print "greater"}}'`
+response_wait=`echo | awk -v T=$trigger -v L=$load_wait 'BEGIN{if ( L > T){ print "greater"}}'`
+if [[ $response = "greater" ]]
+then
+  if [[ $response_wait = "greater" ]]
+  then
+    # cause a kernel panic with eventual reboot
+    echo c > /proc/sysrq-trigger
+  fi
+fi

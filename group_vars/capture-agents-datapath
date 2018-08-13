@@ -1,0 +1,5 @@
+---
+DP_framerate: 30/1
+DP_width: 1280
+DP_height: 720
+DP_driver: True

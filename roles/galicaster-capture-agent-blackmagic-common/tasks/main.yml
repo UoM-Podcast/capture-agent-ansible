@@ -1,0 +1,54 @@
+## galicaster-capture-agents-blackmagic-common/tasks
+---
+
+- name: "Install Blackmagic packages"
+  apt: >
+          pkg={{ item }}
+          state=latest
+          force=yes
+  with_items:
+          - desktopvideo
+          - desktopvideo-gui
+  notify: restart galicaster
+  register: blackmagic_driver_installed
+  tags:
+          - blackmagic
+
+- name: "Install Blackmagic Firmware"
+  shell: /usr/bin/BlackmagicFirmwareUpdater update /dev/blackmagic/dv0
+  when: blackmagic_driver_installed.changed
+  tags:
+          - blackmagic
+
+- name: "Blackmagic profiles"
+  template: >
+          src=profiles/{{ item }}
+          dest=/etc/galicaster/profiles/{{ item }}
+          group={{ ca_username }}
+          owner={{ ca_username }}
+  with_items:
+          - blackmagic-embedded.ini
+          - blackmagic-embedded-usb.ini
+          - blackmagic-split.ini
+          - blackmagic-usb.ini
+          - blackmagic-no-usb.ini
+          - no-video-usb.ini
+  notify: restart galicaster
+  tags:
+          - galicaster
+          - galicaster_config
+          - galicaster_profiles
+          - blackmagic
+
+- name: "Reboot if Firmware updated"
+  command: /sbin/shutdown -r +1
+  when: blackmagic_driver_installed.changed and ansible_connection != "local"
+  register: restarted
+  tags:
+          - blackmagic
+
+- name: Blackmagic - wait for ssh return
+  local_action: wait_for host={{ ansible_ssh_host }} port=22 state=started delay=90
+  when: restarted.changed
+  tags:
+          - blackmagic

@@ -1,0 +1,4 @@
+## galicaster-capture-agent-wifi/vars
+---
+
+ingest_time: "{{ GC_ingest_time }}"

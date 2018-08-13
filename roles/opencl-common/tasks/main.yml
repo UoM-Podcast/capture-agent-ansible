@@ -1,0 +1,120 @@
+---
+
+# https://software.intel.com/file/528293/download
+- name: Download intel opencl source packages
+  get_url: >
+           url={{ repo_hostname }}{{ deploy_environment }}/opencl-source.zip
+           dest=/tmp/opencl-source.zip
+           force=no
+  when: opencl is defined and opencl == 'intel'
+  tags:
+        - lecturesight
+        - opencl
+        - intel
+
+- name: unzip the intel opencl source
+  unarchive: >
+           src=/tmp/opencl-source.zip
+           dest=/tmp
+           copy=no
+  when: opencl is defined and opencl == 'intel'
+  tags:
+        - lecturesight
+        - opencl
+        - intel
+
+- name: Create intel-opencl directory
+  file: >
+          path=/usr/local/src/intel-opencl
+          state=directory
+  when: opencl is defined and opencl == 'intel'
+  tags:
+        - lecturesight
+        - opencl
+        - intel
+
+- name: untar the intel opencl source packages
+  unarchive: >
+           src=/tmp/{{ item }}
+           dest=/usr/local/src/intel-opencl
+           copy=no
+  with_items:
+        - intel-opencl-r3.0-57406.x86_64.tar.xz
+        - intel-opencl-cpu-r3.0-57406.x86_64.tar.xz
+        - intel-opencl-devel-r3.0-57406.x86_64.tar.xz
+  when: opencl is defined and opencl == 'intel'
+  tags:
+        - lecturesight
+        - opencl
+        - intel
+
+- name: Copy source files to filesystem
+  shell: cp -R /usr/local/src/intel-opencl/* /
+  when: opencl is defined and opencl == 'intel'
+  tags:
+        - lecturesight
+        - opencl
+        - intel
+
+- name: Download Patched 4.7 kernel source with opencl
+  get_url: >
+           url={{ repo_hostname }}{{ deploy_environment }}/intel-opencl-kernel-4.7.tar.gz
+           dest=/tmp/intel-opencl-kernel-4.7.tar.gz
+           force=no
+  when:
+      - opencl is defined
+      - opencl == 'intel'
+      - ansible_kernel | version_compare(opencl_kernel_version, '<=')
+  tags:
+        - lecturesight
+        - opencl
+        - intel
+
+- name: update lib cache
+  shell: ldconfig
+  when: opencl is defined and opencl == 'intel'
+  tags:
+        - lecturesight
+        - opencl
+        - intel
+
+- name: Untar the Patched 4.7 kernel with opencl
+  unarchive: >
+           src=/tmp/intel-opencl-kernel-4.7.tar.gz
+           dest=/usr/local/src
+           copy=no
+  when:
+        - opencl is defined
+        - opencl == 'intel'
+        - ansible_kernel | version_compare(opencl_kernel_version, '<=')
+  tags:
+        - lecturesight
+        - opencl
+        - intel
+
+- name: Install 4.7 kernel
+  make: >
+           chdir=/usr/local/src/intel-opencl/linux-4.7
+           target=modules_install
+  when:
+       - opencl is defined
+       - opencl == 'intel'
+       - ansible_kernel | version_compare(opencl_kernel_version, '<=')
+  tags:
+        - lecturesight
+        - opencl
+        - intel
+
+- name: Install 4.7 kernel part 2
+  make: >
+           chdir=/usr/local/src/intel-opencl/linux-4.7
+           target=install
+  when:
+      - opencl is defined
+      - opencl == 'intel'
+      - ansible_kernel | version_compare(opencl_kernel_version, '<=')
+  register: kernel_update
+  tags:
+        - lecturesight
+        - opencl
+        - intel

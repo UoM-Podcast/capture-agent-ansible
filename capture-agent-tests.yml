@@ -1,0 +1,5 @@
+---
+- hosts: capture-agents
+  remote_user: root
+  roles:
+      - galicaster-capture-agent-tests

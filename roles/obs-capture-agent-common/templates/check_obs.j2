@@ -1,0 +1,13 @@
+#!/bin/bash
+
+export PATH=/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
+export DISPLAY=:0
+
+echo -n "checking obs: "
+
+OBS_PID=`pgrep -f obs_auto`
+if ! [ "$OBS_PID" ]; then
+  echo "obs not running, restarting"
+  obs_auto
+  exit 1
+fi

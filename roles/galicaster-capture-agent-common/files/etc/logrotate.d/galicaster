@@ -1,0 +1,9 @@
+/var/log/galicaster/*log {
+     missingok
+     notifempty
+     sharedscripts
+     copytruncate
+     delaycompress
+     size 10M
+     rotate 4
+}

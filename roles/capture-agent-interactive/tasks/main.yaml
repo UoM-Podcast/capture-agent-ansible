@@ -1,0 +1,31 @@
+---
+- name: Set a default series for an interactive capture agents
+  blockinfile:
+    dest: "/etc/{{ca_username}}/conf.ini"
+    block: |
+
+      [series]
+      default = {{ oc_default_series }}
+    insertafter: EOF
+  tags:
+        - interactive
+        - galicaster_config
+        - galicaster
+
+- name: "Remove Excess galicaster profiles"
+  file: >
+        state=absent
+        dest=/etc/galicaster/profiles/{{ item }}
+  with_items:
+         - datapath-split.ini
+         - datapath-usb.ini
+         - dual-datapath-split.ini
+         - dual-datapath-usb.ini
+         - datapath-no-usb.ini
+         - dual-datapath-no-usb.ini
+  tags:
+        - galicaster
+        - galicaster_config
+        - galicaster_profiles
+        - datapath
+        - axis

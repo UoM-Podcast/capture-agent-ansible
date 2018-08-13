@@ -1,0 +1,18 @@
+## capture-agent-not-wifi/tasks
+---
+- name: remove eduroam setting if not wifi
+  file: >
+          path=/etc/NetworkManager/system-connections/eduroam
+          state=absent
+  tags:
+          - un_wifi
+
+- name: stop wifi tunnel service
+  systemd: >
+          enabled=no
+          daemon_reload=yes
+          state=stopped
+          name=ca-autossh.service
+  ignore_errors: true
+  tags:
+          - un_wifi

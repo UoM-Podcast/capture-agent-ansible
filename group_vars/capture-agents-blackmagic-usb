@@ -1,0 +1,12 @@
+---
+GC_profile: Blackmagic HDMI USB Audio
+GC_profilefailover_device: "{{ '17a00101' if GC_usb_mic_source == 'alsa_input.usb-Samson_Technologies_Samson_UB1-00.analog-stereo' else '0d8c0132' }}"
+GC_profilefailover_profile: Blackmagic HDMI NO Audio
+GC_profilefailover_bool: True
+GC_ddp_audiofader_name: Mic
+GC_ddp_audiofader_index: 1
+GC_checkaudiosource_low_alert: -50
+GC_checkaudiosource_check_recording: False
+
+peakaboo_audio_device: "{{ GC_usb_mic_source }}"
+peakaboo_audio_src: pulsesrc

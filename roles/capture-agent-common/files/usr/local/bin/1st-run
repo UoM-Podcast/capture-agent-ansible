@@ -1,0 +1,24 @@
+#!/bin/bash
+export DISPLAY=:0
+# /usr/bin/gsettings set org.gnome.Vino enabled true
+# /usr/bin/gsettings set org.gnome.Vino notify-on-connect false
+# /usr/bin/gsettings set org.gnome.Vino view-only false
+# /usr/bin/gsettings set org.gnome.Vino disable-xdamage true
+# /usr/bin/gsettings set org.gnome.Vino prompt-enabled false
+# /usr/bin/gsettings set org.gnome.Vino icon-visibility never
+# /usr/bin/gsettings set org.gnome.Vino vnc-password Z2MyMHYxM25j
+# /usr/bin/gsettings set org.gnome.Vino authentication-methods "['vnc']"
+/usr/bin/gsettings set org.gnome.desktop.screensaver idle-activation-enabled false
+/usr/bin/gsettings set com.ubuntu.update-notifier no-show-notifications true
+/usr/bin/gsettings set com.ubuntu.update-notifier auto-launch false
+/usr/bin/gsettings set com.ubuntu.update-notifier show-apport-crashes false
+/usr/bin/gsettings set org.gnome.desktop.session idle-delay 0
+/usr/bin/gsettings set org.gnome.settings-daemon.plugins.power idle-dim false
+/usr/bin/gsettings set org.gnome.desktop.screensaver lock-enabled false
+/usr/bin/gsettings set com.canonical.Unity.Launcher favorites "['application://ubiquity.desktop', 'application://org.gnome.Nautilus.desktop', 'application://gedit.desktop', 'application://gnome-terminal.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']"
+/usr/bin/gsettings set org.gnome.desktop.background primary-color '#00000000000'
+/usr/bin/gsettings set org.gnome.desktop.background color-shading-type 'solid'
+/usr/bin/gsettings set org.gnome.desktop.background picture-uri ''
+/usr/bin/gsettings set org.gnome.desktop.background picture-options 'none'
+/usr/bin/dconf load /org/compiz/profiles/unity/ < /tmp/dconf-compiz-unity-settings.ini
+rm ~galicaster/.config/autostart/1st-run.desktop

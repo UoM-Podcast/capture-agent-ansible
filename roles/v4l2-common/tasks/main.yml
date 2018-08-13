@@ -1,0 +1,15 @@
+---
+- name: "Install Galicaster Profiles"
+  template: >
+         src=profiles/{{ item }}
+         dest=/etc/galicaster/profiles/{{ item }}
+         group={{ ca_username }}
+         owner={{ ca_username }}
+  with_items:
+         - v4l2-split.ini
+         - v4l2-usb.ini
+  # notify: restart galicaster
+  tags:
+         - galicaster
+         - galicaster_config
+         - galicaster_profiles

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+warn=$2
+crit=$4
+# get the load average for 15 mins
+current_load=`uptime | sed 's/.*load average: //' | awk -F\, '{print $3}' | xargs`
+if [[ $current_load < $warn ]]; then
+    if [[ $current_load < $crit ]]; then
+
+	    echo "CRITICAL - Load is too low! $current_load"
+	    exit 2
+    else
+        echo "WARNING - Load = $current_load"
+	    exit 1
+    fi
+else
+	echo "OK - Load = $current_load"
+	exit 0
+fi

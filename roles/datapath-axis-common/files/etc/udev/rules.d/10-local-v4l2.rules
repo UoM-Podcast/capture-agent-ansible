@@ -1,0 +1,8 @@
+# /etc/udev/rules.d/10-local-v4l2.rules
+#
+# Create a persistent name /dev/video0 symlink to the device name assigned by the kernel
+SUBSYSTEM=="video4linux",KERNEL=="video*",ATTRS{name}=="rgb133 (0-0)",SYMLINK+="datapath0"
+# Create a persistent name /dev/video1 symlink to the device name assigned by the kernel
+SUBSYSTEM=="video4linux",KERNEL=="video*",ATTRS{name}=="rgb133 (1-0)",SYMLINK+="datapath1"
+# Create a persistent name /dev/video2 symlink to the device name assigned by the kernel
+SUBSYSTEM=="video4linux",KERNEL=="video*",ATTRS{name}=="*Webcam*",SYMLINK+="webcam0"

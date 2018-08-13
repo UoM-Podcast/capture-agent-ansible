@@ -1,0 +1,18 @@
+## galicaster-capture-agent-common/vars
+---
+
+matterhorn_workflow: "{{ GC_matterhorn_workflow }}"
+ingest_time: "{{ GC_ingest_time }}"
+ca_hostname: "{{ ansible_uom_hostname }}"
+ip_address: "{{ ansible_release_host|default(dhcp) }}"
+
+GC_support_group: "{{ support_group|default(mtt) }}"
+
+failovermic_bool: "{{ ansible_failovermic|default(False) }}"
+failovermic_source: "{{ GC_failovermic_source }}"
+
+profilefailover_bool: "{{ GC_profilefailover_bool|default(False) }}"
+profilefailover_device: "{{ GC_profilefailover_device }}"
+profilefailover_profile: "{{ GC_profilefailover_profile }}"
+
+qrcodedropframes_bool: "{{ ansible_qrcode_dropframes|default(True) }}"
