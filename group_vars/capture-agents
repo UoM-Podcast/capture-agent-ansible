@@ -7,7 +7,6 @@ matterhorn_host: "{{ GC_staging_matterhorn_host if deploy_environment == 'stagin
 matterhorn_user: "{{ GC_staging_matterhorn_user if deploy_environment == 'staging' else GC_matterhorn_user }}"
 matterhorn_password: "{{ GC_staging_matterhorn_password if deploy_environment == 'staging' else GC_matterhorn_password }}"
 GC_version: "{{ 'master' if deploy_environment == 'production' else 'master' }}"
-ca_username: "andrew"
 
 ntp_server: ntp2a.mcc.ac.uk ntp2b.mcc.ac.uk ntp2c.mcc.ac.uk
 
