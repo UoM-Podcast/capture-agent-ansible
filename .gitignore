@@ -2,3 +2,4 @@ nbproject/
 *~
 *.retry
 .idea/
+group_vars/all
