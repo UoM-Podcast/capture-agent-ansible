@@ -1,54 +1,65 @@
 ---
+
 # group_vars/all example file. this file should be encrypted for the obvious security problems. see ansible vault
+# some of these vars will not mean anything unless you run the associated service. In this case, leave as default
+
 # OS username
-ca_username:
+ca_username: galicaster
 
 # Opencast credentials
-GC_matterhorn_host :
-GC_staging_matterhorn_host :
-GC_matterhorn_user :
-GC_matterhorn_password :
-GC_matterhorn_workflow :
+GC_matterhorn_host : admin.oc.example.com
+GC_staging_matterhorn_host : admin.ocstage.example.com
+GC_matterhorn_user : admin
+GC_staging_matterhorn_user : admin
+GC_staging_matterhorn_password : opencast
+GC_matterhorn_password : opencast
+GC_matterhorn_workflow : default
 
 # Wireless credentials
-eduroam_user:
-eduroam_password:
-home_server:
-home_server_user:
-home_staging_server:
-home_staging_server_user:
+eduroam_user: username@example.com
+eduroam_password: password
 
-# nagios
-nagios_server:
-nagios_server_user:
+# A home server for wifi agents to dial home to through an ssh tunnel
+home_server: home.oc.example.com
+home_server_user: home
+home_staging_server: home.ocstage.example.com
+home_staging_server_user: home
 
-# peakaboo setting and credentials
-peakaboo_meteor:
-peakaboo_staging_meteor:
-peakaboo_user:
-peakaboo_password:
-peakaboo_http:
-peakaboo_staging_http:
+# Nagios
+nagios_server: nagios.oc.example.com
+nagios_server_user: nagios
 
-# proxy servers, CA vnc password and private deb repository uri.
-http_proxy_server:
-https_proxy_server:
-ca_vnc_password:
-deb_repo_hostname:
-repo_hostname:
+# Peakaboo setting and credentials
+peakaboo_meteor: wss://peakaboo.oc.example.ac.uk/websocket
+peakaboo_staging_meteor: wss://peakaboo.ocstage.example.ac.uk/websocket
+peakaboo_user: galicaster@example.com
+peakaboo_password: password
+peakaboo_http: https://peakaboo.oc.example.ac.uk
+peakaboo_staging_http: https://peakaboo.ocstage.example.ac.uk
 
-# file name of the ubuntu iso to install
-ubuntu_iso:
+# proxy servers if used
+http_proxy_server: ''
+https_proxy_server: ''
+
+# Capture agent VNC password
+ca_vnc_password: password
+
+# debian and fileserver private repositories for storing driver, lecturesight source and other files
+deb_repo_hostname: false
+repo_hostname: http://repo.example.com/repo/
+
+# file name of the ubuntu iso to install when using the extra var 'reinstall_os=true'
+ubuntu_iso: ubuntu-16-04-desktop-custom.iso
 
 # rtp camera settings
-rtp_user:
-rtp_pass:
-rtp_default_ip:
-rtp_port:
+rtp_user: admin
+rtp_pass: password
+rtp_default_ip: 192.168.0.90
+rtp_port: 554
 
 # ip camera onvif connectivity settings
-onvif_user:
-onvif_pass:
+onvif_user: onvif
+onvif_pass: password
 
 # youtube live stream key for livestreaming
-youtube_stream_key:
+youtube_stream_key: youtube-stream-key

@@ -89,6 +89,7 @@
           state=present
   with_items:
           - "deb {{ manchester_deb_repo }} all/"
+  when: deb_repo_hostname|default(false)
   tags:   apt
 
 - name: "Update apt cache"
