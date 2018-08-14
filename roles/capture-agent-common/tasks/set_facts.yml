@@ -133,34 +133,9 @@
           - peakaboo
           - ddp
 
-- name: "If CSSC, Set special vars"
-  set_fact:
-    peakaboo_meteor: ws://nursingsimulationloadbalancer-1713003476.eu-west-2.elb.amazonaws.com/websocket
-    peakaboo_http: http://nursingsimulationloadbalancer-1713003476.eu-west-2.elb.amazonaws.com
-    GC_version: r/cssc-UoM
-    nfclock: True
-    peakaboolive: True
-    livestreaming: False
-    rtmp_host: 35.176.125.214
-    CA_ddp: False
-    CA_audiostream: False
-    CA_qrcode: False
-    CA_camctrl: False
-    CA_vapixctrl: True
-    CA_ckaud: False
-    oc_trim_default: false
-    GC_custom_rec_title: 'title = CSSC Simulation Recording'
-  when: CA_interactive_role == 'cssc'
-  tags:
-          - galicaster
-          - galicaster_config
-          - peakaboo
-          - ddp
-
 - name: setting user interactive facts
   set_fact:
     workflow_params: 'archiveOp:true;publishHarvesting:true;trimHold:{{oc_trim_default | lower}};emailAddresses:{{ oc_default_email }};videoPreview:true;usePublicStore:{{ vl_public }}'
-    # oc_default_series: 376d4d10-ef6e-4773-aaf4-db319e9c2e68
   when:
     - CA_interactive
     - not vl_private_ep_acl
@@ -171,10 +146,6 @@
   when:
     - CA_interactive
     - vl_private_ep_acl is defined
-
-
-
-
 
 # - debug: msg="{{ ansible_interfaces }}"
 # - debug: msg="{{ GC_failovermic_source }}"
